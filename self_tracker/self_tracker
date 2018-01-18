@@ -1,0 +1,22 @@
+安装bittorrent
+地址：https://web.archive.org/web/20110712221649/http://download.bittorrent.com/dl/archive/
+tar zxvf BitTorrent-3.4.2.tar.gz
+cd BitTorrent-3.4.2
+python setup.py install
+
+启动Bit服务(tracker服务)
+./bttrack.py --port 6969 --dfile dstate >>/var/log/bttrack.log
+
+制作BT发布文件(或者使用其他工具)
+./btmakemetafile.py /data/www/client/myfile.exe http://bt.imdst.com:6969/announce
+
+启动原始下载服务
+nohup ./btdownloadheadless.py --max_allow_in 20 --max_upload_rate 500 --minport 6888 --maxport 6888 /data/www/client/myfile.exe.torrent --saveas /data/www/client/myfile.exe >/dev/null  &
+        nohup用法 不挂断地运行命令
+            标准输出到
+            nohup Command [Arg ...] [&]
+/data/www/client/myfile.exe.torrent 发布文件的位置
+/data/www/client/myfile.exe 实际位置
+--maxallow 20 指这个种子最多可以接受20个连接
+--maxupload_rate 500 指这个种子最大的可以接受下载的带宽 500 KB(byte)/s，这样可以控制下载带宽。
+--minport 6888 --maxport 6888 最大最小监听端口，这样写就是说种子只监听6888端口    (种子监听端口范围？)
