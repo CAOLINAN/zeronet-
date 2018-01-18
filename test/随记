@@ -1,0 +1,59 @@
+connectionServer
+    self.ip
+    self.port
+    self.last_connection_id 连接ID增量
+    self.port_opened
+    
+    self.tor    tor网络连接处理
+
+    self.connections 连接器列表
+    self.whitelist 本地所有IP列表(不用防止洪水攻击)   [127.0.0.1，*]
+    self.ip_incoming 接入节点IP(只有一分钟内的防止洪水攻击){'ip':0/1/2/3/4/5/6}
+    self.broken_ssl_peer_ids 损坏的ssl连接节点ID
+    self.ips    通过IP连接ip对应连接器字典{'IP':connection}
+    self.has_internet 
+
+    self.stream_server  流节点服务器
+    self.running    运行中
+    self.checker    线程检查连接 
+    
+    self.start_recv 接受字典，默认值为int
+    self.start_sent 发送字典，默认值为int
+    self.bytes_recv
+    self.bytes_sent
+
+    peer_id 12位的加密信息数
+    检测msgpack版本,0.4之前的则退出系统
+
+    self.pool  只接受500连接数
+    self.stream_server 创建一个tcp服务器监听15441端口处理,处理方法为handleIncomingConnection
+    self.handleRequest  请求处理,初始化中给定(在fileserver中为handleRequest)(接口？)
+
+
+    self.start():
+        self.running 标记为true
+        CryptConnection.manger.loadCerts()  加载证书
+        self.stream_server.server_forever() 启动tcp服务器
+
+    self.stop():
+        self.runnning 标记为false
+        self.stream_server.stop()   关闭TCP服务器
+
+    self.handleIncomingConnection(self,sock,addr):
+        ip, port = addr
+        防止洪水攻击
+        如果ip在接入节点列表找那个并且ip不在白名单中
+            ip_incoming的ip值+1
+            如果ip_incoming的ip值大于6，则认为遭到洪水攻击，睡眠30秒后关闭sock
+        否则  ip_incoming的ip值为1
+
+        初始化连接器()
+        将连接器加入到连接器列表中
+        self.ips加入对应的连接器键值对
+        连接器接入处理 
+            设置TCP
+            
+            事件循环
+
+
+

@@ -55,9 +55,9 @@ class SiteManager(object):
                     added += 1
 
             address_found.append(address)
-
         # Remove deleted adresses
         if cleanup:
+            print("start clean up")
             for address in self.sites.keys():
                 if address not in address_found:
                     del(self.sites[address])
@@ -79,7 +79,6 @@ class SiteManager(object):
                         del content_db.site_ids[address]
                     if address in content_db.sites:
                         del content_db.sites[address]
-
         if added:
             self.log.debug("SiteManager added %s sites" % added)
         self.loaded = True

@@ -200,14 +200,14 @@ class Actions(object):
         logging.info("Creating directory structure...")
         from Site import Site
         from Site import SiteManager
-        SiteManager.site_manager.load()
-
-        os.mkdir("%s/%s" % (config.data_dir, address))
+        SiteManager.site_manager.load() # 创建文件夹(域名系统1Name)并向site表插入1Name...信息,插入域名站点信息到sites.json文件中
+        os.mkdir("%s/%s" % (config.data_dir, address)) # 创建文件夹(新站点)
         open("%s/%s/index.html" % (config.data_dir, address), "w").write("Hello %s!" % address)
 
         logging.info("Creating content.json...")
-        site = Site(address) # 创建默认setting
-        # 签名 一个json文件,将文件夹下文件哈希并将一些默认值保存在content.json文件中，extend 额外补加到content.json文件中
+        site = Site(address) # 创建默认setting，向数据库site表插入站点地址
+
+        # 签名一个json文件,将文件夹下文件哈希并将一些默认值保存在content.json文件中，extend 额外补加到content.json文件中，数据库content表中插入站点信息
         site.content_manager.sign(privatekey=privatekey, extend={"postmessage_nonce_security": True})
         site.settings["own"] = True
         site.saveSettings()     # 更新站点信息到sites.json文件中

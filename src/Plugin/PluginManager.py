@@ -4,8 +4,6 @@ import os
 import sys
 from collections import defaultdict
 
-from test import path_init
-
 from Debug import Debug
 from Config import config
 
