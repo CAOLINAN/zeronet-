@@ -28,3 +28,6 @@ tools/phantomjs
 
 # ZeroNet config file
 zeronet.conf
+
+# test
+test/*
