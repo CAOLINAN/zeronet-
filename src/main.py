@@ -213,6 +213,25 @@ class Actions(object):
         site.saveSettings()     # 更新站点信息到sites.json文件中
 
         logging.info("Site created!")
+    # 为某个资源定价
+    def setPrice(self, address, data, privatekey=None, inner_path="content.json"):
+        logging.info("set data price...")
+        from Site import Site
+        from Site import SiteManager
+        SiteManager.site_manager.load()
+        site = Site(address, allow_create=False)
+        if not privatekey:
+            from User import UserManager
+            user = UserManager.user_manager.get()
+            if user:
+                site_data = user.getSiteData(address)
+                privatekey = site_data.get("privatekey")
+            else:
+                privatekey = None
+            if not privatekey:
+                # Not found in users.json, ask from console
+                import getpass
+                privatekey = getpass.getpass("Private key (input hidden):")
 
     def siteSign(self, address, privatekey=None, inner_path="content.json", publish=False, remove_missing_optional=False):
         from Site import Site
@@ -498,6 +517,7 @@ class Actions(object):
         print json.dumps(config.getServerInfo(), indent=2, ensure_ascii=False)
 
     # def
+
 
 actions = Actions()
 # Starts here when running zeronet.py

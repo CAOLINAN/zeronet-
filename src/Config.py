@@ -56,6 +56,8 @@ class Config(object):
             # 'zero://47.104.186.14:8001'
             # 'http://192.168.14.240:6969/announce',
             # 'http://192.168.14.201:7777/announce'
+            # 'zero://47.104.186.14:8001'
+            'udp://47.104.186.14:8000'
         ]
         # Platform specific
         if sys.platform.startswith("win"):

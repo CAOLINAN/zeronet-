@@ -77,7 +77,7 @@ class UdpTrackerClient:
 
         values = [args[a] for a in fields.split()]
         payload = struct.pack('!20s20sQQQLLLLH', *values)
-        print values
+        # print values
         return self._send(ANNOUNCE, payload)
 
     def scrape(self, info_hash_list):

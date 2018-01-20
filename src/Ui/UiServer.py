@@ -89,6 +89,7 @@ class UiServer:
             get = dict(cgi.parse_qsl(env['QUERY_STRING']))
         else:
             get = {}
+        print("get is {}".format(get))
         ui_request = UiRequest(self, get, env, start_response)
         if config.debug:  # Let the exception catched by werkezung
             return ui_request.route(path)

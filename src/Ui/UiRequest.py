@@ -1,9 +1,10 @@
+# coding=utf-8
 import time
 import re
 import os
 import mimetypes
 import json
-import cgi
+import urllib.parse
 
 from Config import config
 from Site import SiteManager
@@ -88,7 +89,13 @@ class UiRequest(object):
 
             self.sendHeader(content_type=content_type, extra_headers=extra_headers)
             return ""
-
+        elif self.env["REQUEST_METHOD"] == "POST":
+            # parames = self.env['wsgi.input'].read().strip()
+            parames =  dict(urllib.parse.parse_qsl(self.env["wsgi.input"].read()))
+            print(type(parames))
+            # print(param)
+            return self.error403(r"大傻逼")
+        # print (path)
         if path == "/":
             return self.actionIndex()
         elif path == "/favicon.ico":
@@ -124,6 +131,7 @@ class UiRequest(object):
             return self.actionSiteAdd()
         # Site media wrapper
         else:
+            print('self.get is {}'.format(self.get))
             if self.get.get("wrapper_nonce") and self.get["wrapper_nonce"] in self.server.wrapper_nonces:
                 self.server.wrapper_nonces.remove(self.get["wrapper_nonce"])
                 return self.actionSiteMedia("/media" + path)  # Only serve html files with frame
@@ -264,11 +272,12 @@ class UiRequest(object):
     def actionWrapper(self, path, extra_headers=None):
         if not extra_headers:
             extra_headers = []
-
         match = re.match("/(?P<address>[A-Za-z0-9\._-]+)(?P<inner_path>/.*|$)", path)
         if match:
+            print("有match")
             address = match.group("address")
             inner_path = match.group("inner_path").lstrip("/")
+            print("inner_path is ".format(inner_path))
             if "." in inner_path and not inner_path.endswith(".html") and not inner_path.endswith(".htm"):
                 return self.actionSiteMedia("/media" + path)  # Only serve html files with frame
             if self.isAjaxRequest():
@@ -301,6 +310,7 @@ class UiRequest(object):
             # Make response be sent at once (see https://github.com/HelloZeroNet/ZeroNet/issues/1092)
 
         else:  # Bad url
+            print("没match")
             return False
 
     def getSiteUrl(self, address):
@@ -664,6 +674,7 @@ class UiRequest(object):
     def error400(self, message=""):
         self.sendHeader(400)
         return self.formatError("Bad Request", message)
+
 
     # You are not allowed to access this
     def error403(self, message="", details=True):

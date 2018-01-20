@@ -57,7 +57,7 @@ class SiteManager(object):
             address_found.append(address)
         # Remove deleted adresses
         if cleanup:
-            print("start clean up")
+            # print("start clean up")
             for address in self.sites.keys():
                 if address not in address_found:
                     del(self.sites[address])

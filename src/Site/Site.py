@@ -810,7 +810,7 @@ class Site(object):
     # Gather peers from tracker
     # Return: Complete time or False on error
     def announceTracker(self, tracker_protocol, tracker_address, fileserver_port=0, add_types=[], my_peer_id="", mode="start"):
-        print("""Debug CLN start announceTracker""")
+        # print("""Debug CLN tracker_protocol is {}""".format(tracker_protocol))
         s = time.time()
         if "ip4" not in add_types:
             fileserver_port = 0
@@ -829,7 +829,7 @@ class Site(object):
                 # print('back is {}'.format(back))
                 # print(back)
                 peers = back["response"]["peers"]
-                print("""udp tracker:Debug CLN Site, peers is {}""".format(peers))
+                # print("""udp tracker:Debug CLN Site, peers is {}""".format(peers))
             except Exception, err:
                 return False
 
@@ -844,11 +844,11 @@ class Site(object):
             try:
                 url = "http://" + tracker_address + "?" + urllib.urlencode(params)
                 # Load url
-                print(url)
+                # print(url)
                 with gevent.Timeout(30, False):  # Make sure of timeout
                     req = urllib2.urlopen(url, timeout=25)
                     response = req.read()
-                    print (response)
+                    # print (response)
                     req.fp._sock.recv = None  # Hacky avoidance of memory leak for older python versions
                     req.close()
                     req = None
@@ -875,7 +875,7 @@ class Site(object):
         else:
             peers = []
 
-        print("""Debug CLN start announceTracker successfule peers is {}""".format(peers))
+        # print("""Debug CLN start announceTracker successfule peers is {}""".format(peers))
         # Adding peers
         added = 0
         for peer in peers:
