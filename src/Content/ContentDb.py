@@ -96,7 +96,8 @@ class ContentDb(Db):
             "modified": int(content.get("modified", 0))
         }, {
             "site_id": self.site_ids.get(site.address, 0),
-            "inner_path": inner_path
+            "inner_path": inner_path,
+            # "price_path": price_path
         })
 
     def deleteContent(self, site, inner_path):

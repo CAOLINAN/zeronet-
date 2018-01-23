@@ -29,7 +29,7 @@ from util import helper
 from util import Diff
 from Plugin import PluginManager
 import SiteManager
-
+from Price import PriceDb
 
 @PluginManager.acceptPlugins
 class Site(object):
@@ -52,10 +52,14 @@ class Site(object):
         self.page_requested = False  # Page viewed in browser
         self.websockets = []  # Active site websocket connections
 
+
         self.connection_server = None
         self.loadSettings(settings)  # Load settings from sites.json 从sites.json加载站点setting，没有则创建默认setting(还未存入json文件)
         self.storage = SiteStorage(self, allow_create=allow_create)  # Save and load site files
         self.content_manager = ContentManager(self) # 加载数据库，将站点地址插入到数据库中
+        # CLN
+        print("site :   ",self.address)
+        self.price = PriceDb.getPriceDb(self.address)
         self.content_manager.loadContents()  # Load content.json files
         if "main" in sys.modules and "file_server" in dir(sys.modules["main"]):  # Use global file server by default if possible
             self.connection_server = sys.modules["main"].file_server
@@ -91,6 +95,9 @@ class Site(object):
                 settings["size_optional"] = 0
             if "optional_downloaded" not in settings:
                 settings["optional_downloaded"] = 0
+            # CLN
+            # if "price" not in settings:
+            #     settings["price"] = {}
             self.bad_files = settings["cache"].get("bad_files", {})
             settings["cache"]["bad_files"] = {}
             # Give it minimum 10 tries after restart

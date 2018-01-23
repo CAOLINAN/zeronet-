@@ -28,3 +28,4 @@ class ConfigPlugin(object):
         group.add_argument('--bit_resolver', help='ZeroNet site to resolve .bit domains', default="1Name2NXVi1RDPDgf5617UoW7xA6YrhM9F", metavar="address")
 
         return super(ConfigPlugin, self).createArguments()
+

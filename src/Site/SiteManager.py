@@ -25,6 +25,7 @@ class SiteManager(object):
         atexit.register(lambda: self.save(recalculate_size=True))
 
     # Load all sites from data/sites.json
+    # 插件注册了一个相同的load方法，查找默认的域名系统
     def load(self, cleanup=True, startup=False):
         self.log.debug("Loading sites...")
         self.loaded = False

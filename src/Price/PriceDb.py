@@ -6,6 +6,7 @@ from Config import config
 from Db import Db
 from Debug import Debug
 import os
+import time
 
 class PriceDb(Db):
     def __init__(self, path):
@@ -13,15 +14,16 @@ class PriceDb(Db):
         self.foreign_keys = True
         try:
             self.schema = self.getSchema()
-            self.checkTables() # 创建数据库
+            print(getattr(self))
+            self.checkTables() # 创建数据表
         except Exception, err:
             self.log.error("Error loading price.db: %s, rebuilding..." % Debug.formatException(err))
             self.close()
-            os.unlink(path)  # Remove and try again
+            os.unlink(self.dbpath)  # Remove and try again
             self.schema = self.getSchema()
             self.checkTables()
-        self.site_ids = {}
-        self.sites = {}
+        self.price_ids = {}
+        self.prices = {}
 
     def getSchema(self):
         schema = {}
@@ -29,50 +31,84 @@ class PriceDb(Db):
         schema["version"] = 1
         schema["tables"] = {}
 
-        if not self.getTableVersion("site"):
-            self.log.debug("Migrating from table version-less content.db")
-            version = int(self.execute("PRAGMA user_version").fetchone()[0])
-            if version > 0:
-                self.checkTables()
-                self.execute("INSERT INTO keyvalue ?", {"json_id": 0, "key": "table.site.version", "value": 1})
-                self.execute("INSERT INTO keyvalue ?", {"json_id": 0, "key": "table.content.version", "value": 1})
-
-        schema["tables"]["site"] = {
+        schema["tables"]["price"] = {
             "cols": [
-                ["site_id", "INTEGER  PRIMARY KEY ASC NOT NULL UNIQUE"],
-                ["address", "TEXT NOT NULL"]
-            ],
-            "indexes": [
-                "CREATE UNIQUE INDEX site_address ON site (address)"
-            ],
-            "schema_changed": 1
-        }
-
-        schema["tables"]["content"] = {
-            "cols": [
-                ["content_id", "INTEGER PRIMARY KEY UNIQUE NOT NULL"],
-                ["site_id", "INTEGER REFERENCES site (site_id) ON DELETE CASCADE"],
-                ["inner_path", "TEXT"],
+                ["price_id", "INTEGER PRIMARY KEY UNIQUE NOT NULL"],
+                ["rel_path", "TEXT UNIQUE NOT NULL"],
+                ["name","TEXT"],
                 ["size", "INTEGER"],
                 ["size_files", "INTEGER"],
                 ["size_files_optional", "INTEGER"],
+                ["file_type", "TEXT"],
                 ["modified", "INTEGER"]
             ],
             "indexes": [
-                "CREATE UNIQUE INDEX content_key ON content (site_id, inner_path)",
-                "CREATE INDEX content_modified ON content (site_id, modified)"
+                "CREATE UNIQUE INDEX price_key ON price (rel_path)",
+                "CREATE INDEX content_modified ON content (modified)"
             ],
             "schema_changed": 1
         }
 
         return schema
 
+    def checkTables(self):
+        s = time.time()
+        changed_tables = []
+        cur = self.getCursor()
+
+        cur.execute("BEGIN")
+
+        # Check internal tables
+        # Check keyvalue table
+        changed = cur.needTable("keyvalue", [
+            ["keyvalue_id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
+            ["key", "TEXT"],
+            ["value", "INTEGER"],
+            ["json_id", "INTEGER"],
+        ], [
+            "CREATE UNIQUE INDEX key_id ON keyvalue(json_id, key)"
+        ], version=self.schema["version"])
+        if changed:
+            changed_tables.append("keyvalue")
+
+        # Check schema tables
+        for table_name, table_settings in self.schema["tables"].items():
+            changed = cur.needTable(
+                table_name, table_settings["cols"],
+                table_settings["indexes"], version=table_settings["schema_changed"]
+            )
+            if changed:
+                changed_tables.append(table_name)
+
+        cur.execute("COMMIT")
+        self.log.debug("Db check done in %.3fs, changed tables: %s" % (time.time() - s, changed_tables))
+        if changed_tables:
+            self.db_keyvalues = {}  # Refresh table version cache
+
+        return changed_tables
+
+    # def getCursor(self):
+    #     if not self.conn:
+    #         self.connect()
+    #     return PriceCursor(self.conn, self)
+
+
 price_dbs = {}
 
 # 检查数据库文件是否存在，否则创建数据库
-def getPriceDb(address, path=None):
-    if not path:
-        path = os.path.join(config.data_dir, address, 'price.db')
-    if path not in price_dbs:
-        price_dbs[path] = PriceDb(path)
-    return price_dbs[path]
+def getPriceDb(address=None):
+
+    if address:
+        address_dir = os.path.join(config.data_dir, address)
+        path = os.path.join(address_dir, 'price.db')
+    else:
+        # path = os.path.join(config.data_dir, 'price.db')
+        return False
+    if address not in price_dbs:
+        price_dbs[address] = PriceDb(path)
+        path = os.path.join("E:\ZeroNet-master", path)
+        print("CLN_path :   ",path)
+        print("address:  ", address)
+    return price_dbs[address]
+
+getPriceDb()
