@@ -14,7 +14,6 @@ class PriceDb(Db):
         self.foreign_keys = True
         try:
             self.schema = self.getSchema()
-            print(getattr(self))
             self.checkTables() # 创建数据表
         except Exception, err:
             self.log.error("Error loading price.db: %s, rebuilding..." % Debug.formatException(err))
@@ -44,7 +43,7 @@ class PriceDb(Db):
             ],
             "indexes": [
                 "CREATE UNIQUE INDEX price_key ON price (rel_path)",
-                "CREATE INDEX content_modified ON content (modified)"
+                "CREATE INDEX price_modified ON price (modified)"
             ],
             "schema_changed": 1
         }

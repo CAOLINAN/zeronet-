@@ -19,7 +19,6 @@ class SiteManagerPlugin(object):
     def load(self, *args, **kwargs):
         super(SiteManagerPlugin, self).load(*args, **kwargs)
         if not self.get(config.bit_resolver):
-            raise Exception("Debug:CLN")
             self.need(config.bit_resolver)  # Need ZeroName site
 
     # Checks if its a valid address

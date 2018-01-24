@@ -58,7 +58,7 @@ class Site(object):
         self.storage = SiteStorage(self, allow_create=allow_create)  # Save and load site files
         self.content_manager = ContentManager(self) # 加载数据库，将站点地址插入到数据库中
         # CLN
-        print("site :   ",self.address)
+        # print("site :   ",self.address)
         self.price = PriceDb.getPriceDb(self.address)
         self.content_manager.loadContents()  # Load content.json files
         if "main" in sys.modules and "file_server" in dir(sys.modules["main"]):  # Use global file server by default if possible

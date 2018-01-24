@@ -374,6 +374,7 @@ class SiteManagerPlugin(object):
         self.log.debug("Updated merger sites in %.3fs" % (time.time() - s))
 
     def load(self, *args, **kwags):
+        print("updateMergerSites.load")
         super(SiteManagerPlugin, self).load(*args, **kwags)
         self.updateMergerSites()
 

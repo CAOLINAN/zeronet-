@@ -106,7 +106,8 @@ else:
     console_log.setLevel(logging.INFO)  # Display only important info to console
 
 # Load plugins
-from Plugin import PluginManager
+from Plugin import PluginManager # 将'plugins'添加到环境path中
+
 PluginManager.plugin_manager.loadPlugins() # 加载默认数据库，新建mutes.json文件
 config.loadPlugins()
 config.parse()  # Parse again to add plugin configuration options

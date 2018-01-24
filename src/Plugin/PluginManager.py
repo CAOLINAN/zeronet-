@@ -22,7 +22,7 @@ class PluginManager:
         # importErrors(plugins/AnnounceZero/AnnounceZeroPlugin.py)
         self.after_load = []  # Execute functions after loaded plugins
 
-        sys.path.append(self.plugin_path)
+        sys.path.append(self.plugin_path) # 将插件添加到系统环境变量中，优先查询插件(看不懂这个操作)
 
         if config.debug:  # Auto reload Plugins on file change
             from src.Debug import DebugReloader
@@ -33,6 +33,7 @@ class PluginManager:
     # Load all plugin
     def loadPlugins(self):
         # 加载plugins目录下所有模块
+        # 这里初始化类时虽然已经将plugin_path('plugins')添加到环境变量中，但是当前环境工作目录为主工作目录，所以才能找到plugins目录
         for dir_name in sorted(os.listdir(self.plugin_path)):
             # if dir_name == "plugins/Mute":
             #     # 新建mutes.json文件
@@ -46,7 +47,7 @@ class PluginManager:
                 continue  # Only load in debug mode if module name starts with Debug
             self.log.debug("Loading plugin: %s" % dir_name)
             try:
-                __import__(dir_name)
+                __import__(dir_name) # 导入所有插件
             except Exception, err:
                 self.log.error("Plugin %s load error: %s" % (dir_name, Debug.formatException(err)))
             if dir_name not in self.plugin_names:
@@ -111,7 +112,8 @@ class PluginManager:
         self.log.debug("Patched modules: %s" % patched)
 
 
-plugin_manager = PluginManager()  # Singletone
+plugin_manager = PluginManager()  # Singletone # 将plugins添加到path环境变量中
+
 # plugin_manager.plugin_path = "E:\ZeroNet-master\plugins"
 # plugin_manager.loadPlugins()
 # -- Decorators --
@@ -120,8 +122,8 @@ plugin_manager = PluginManager()  # Singletone
 
 
 def acceptPlugins(base_class):
-    class_name = base_class.__name__
-    plugin_manager.pluggable[class_name] = base_class
+    class_name = base_class.__name__ # 记录类名
+    plugin_manager.pluggable[class_name] = base_class   # 加入可插拔字典 值为{类名：类}键值对
     if class_name in plugin_manager.plugins:  # Has plugins
         classes = plugin_manager.plugins[class_name][:]  # Copy the current plugins
 
@@ -146,19 +148,20 @@ def acceptPlugins(base_class):
 
 
 # Register plugin to class name decorator
+# 该装饰器将类注册到插件管理中，在插件管理实例的插件字典里注册
 def registerTo(class_name):
     plugin_manager.log.debug("New plugin registered to: %s" % class_name)
-    if class_name not in plugin_manager.plugins:
+    if class_name not in plugin_manager.plugins: # 判断类名是否在插件管理字典中，没有则加入管理字典中，值为{类：[]}键值对
         plugin_manager.plugins[class_name] = []
 
     def classDecorator(self):
-        plugin_manager.plugins[class_name].append(self)
+        plugin_manager.plugins[class_name].append(self) # 插件管理字典中类名值新增传入值
         return self
     return classDecorator
 
 
 def afterLoad(func):
-    plugin_manager.after_load.append(func)
+    plugin_manager.after_load.append(func) #插件管理加载完成后方法新增方法
     return func
 
 
