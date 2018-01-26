@@ -9,10 +9,12 @@ import os
 
 class PriceDbDict(dict):
     def __init__(self, site):
+        s = time.time()
         self.site = site
         self.log = self.site.log
-        self.db = PriceDb.getPriceDb(self.site.ad)
-        self.db_id = self.db.needSite(site)
+        self.db = PriceDb.getPriceDb(self.site.address)
+        self.content = self.site.content_manager.contents
+        self.price_id = self.db.needPrice(site)
         self.num_loaded = 0
         super(PriceDbDict, self).__init__(self.db.loadDbDict(site))  # Load keys from database
         self.log.debug("PriceDb init: %.3fs, found files: %s, sites: %s" % (time.time() - s, len(self), len(self.db.site_ids)))

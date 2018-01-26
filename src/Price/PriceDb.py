@@ -8,8 +8,49 @@ from Debug import Debug
 import os
 import time
 
+class Price(object):
+
+    def __init__(self, path, address):
+        self.path = path
+        self.address = address
+        self.relpath = self.getRelpath()
+        self.name = self.getName()
+        self.type = self.getType()
+        self.priceID = self.getID()
+        self.size = self.getSize()
+        self.modify = time.time()
+
+    def getRelpath(self):
+        if os.path.isfile(self.path):
+            data_address = os.path.join(config.data_dir, self.address)
+            return os.path.relpath(self.path, data_address)
+        else:
+            return None
+
+    def getName(self):
+        if os.path.isfile(self.path):
+            return os.path.split(self.relpath)[-1]
+        else:
+            return None
+
+    def getType(self):
+        if os.path.isfile(self.path) and '.' in self.path:
+            return self.relpath.split('.')[-1]
+        else:
+            return None
+
+    def getID(self):
+        pass
+
+    # return size of files in kb
+    def getSize(self):
+        if os.path.isfile(self.path):
+            # self.size =
+            pass
+
+
 class PriceDb(Db):
-    def __init__(self, path):
+    def __init__(self, path, address):
         Db.__init__(self, {"db_name": "PriceDb", "tables": {}}, path)
         self.foreign_keys = True
         try:
@@ -91,6 +132,38 @@ class PriceDb(Db):
     #         self.connect()
     #     return PriceCursor(self.conn, self)
 
+    def loadDbDict(self, site):
+        res = self.execute(
+            "SELECT * FROM price WHERE ?",
+            {"site_id": self.site_ids.get(site.address, 0)}
+        )
+        row = res.fetchone() # 获取结果集中的下一行
+        if row and row["inner_paths"]:
+            inner_paths = row["inner_paths"].split("|")
+            return dict.fromkeys(inner_paths, False)
+        else:
+            return {}
+
+    def getTotalSize(self, price, ignore=None):
+        params = {"price_id": self.price_ids.get(price.id, 0)}
+        if ignore:
+            params["not__inner_path"] = ignore
+        res = self.execute("SELECT SUM(size) + SUM(size_files) AS size, SUM(size_files_optional) AS size_optional FROM price WHERE ?", params)
+        row = dict(res.fetchone())
+
+        if not row["size"]:
+            row["size"] = 0
+        if not row["size_optional"]:
+            row["size_optional"] = 0
+
+        return row["size"], row["size_optional"]
+
+    def listModified(self, price, since):
+        res = self.execute(
+            "SELECT rel_path, modified FROM price WHERE price_id = :price_id AND modified > :since",
+            {"price_id": self.price_ids.get(price.relpath, 0), "since": since}
+        )
+        return {row["rel_path"]: row["modified"] for row in res}
 
 price_dbs = {}
 
@@ -104,10 +177,7 @@ def getPriceDb(address=None):
         # path = os.path.join(config.data_dir, 'price.db')
         return False
     if address not in price_dbs:
-        price_dbs[address] = PriceDb(path)
-        path = os.path.join("E:\ZeroNet-master", path)
-        print("CLN_path :   ",path)
-        print("address:  ", address)
+        price_dbs[address] = PriceDb(path, address)
     return price_dbs[address]
 
 getPriceDb()

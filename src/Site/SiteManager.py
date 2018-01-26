@@ -27,8 +27,6 @@ class SiteManager(object):
     # Load all sites from data/sites.json
     # 两个插件注册了两个相同的load方法，执行顺序为查找默认的域名系统
     def load(self, cleanup=True, startup=False):
-        print("SiteManager.load...")
-        print(self.__class__.mro())
         self.log.debug("Loading sites...")
         self.loaded = False
         from Site import Site
