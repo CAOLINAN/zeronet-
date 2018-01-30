@@ -140,7 +140,7 @@ class Config(object):
         action.add_argument('peer_ip', help='Peer ip to publish (default: random peers ip from tracker)',
                             default=None, nargs='?')
         action.add_argument('peer_port', help='Peer port to publish (default: random peer port from tracker)',
-                            default=15441, nargs='?')
+                            default=15442, nargs='?')
         action.add_argument('--inner_path', help='Content.json you want to publish (default: content.json)',
                             default="content.json", metavar="inner_path")
 
@@ -206,13 +206,13 @@ class Config(object):
 
         self.parser.add_argument('--language', help='Web interface language', default=language, metavar='language')
         self.parser.add_argument('--ui_ip', help='Web interface bind address', default="127.0.0.1", metavar='ip')
-        self.parser.add_argument('--ui_port', help='Web interface bind port', default=43110, type=int, metavar='port')
+        self.parser.add_argument('--ui_port', help='Web interface bind port', default=43111, type=int, metavar='port')
         self.parser.add_argument('--ui_restrict', help='Restrict web access', default=False, metavar='ip', nargs='*')
         self.parser.add_argument('--ui_host', help='Allow access using this hosts', metavar='host', nargs='*')
 
         self.parser.add_argument('--open_browser', help='Open homepage in web browser automatically',
                                  nargs='?', const="default_browser", metavar='browser_name')
-        self.parser.add_argument('--homepage', help='Web interface Homepage', default='1EcnfBFgD6HA9RiAcSMJdkEc8HWrPcKnwC',
+        self.parser.add_argument('--homepage', help='Web interface Homepage', default='1HeLLo4uzjaLetFx6NH3PMwFP3qbRbTf3D',
                                  metavar='address')
         self.parser.add_argument('--updatesite', help='Source code update site', default='1UPDatEDxnvHDo7TXvq6AEBARfNkyfxsp',
                                  metavar='address')
@@ -222,7 +222,7 @@ class Config(object):
         self.parser.add_argument('--workers', help='Download workers per site', default=5, type=int, metavar='workers')
 
         self.parser.add_argument('--fileserver_ip', help='FileServer bind address', default="*", metavar='ip')
-        self.parser.add_argument('--fileserver_port', help='FileServer bind port', default=15441, type=int, metavar='port')
+        self.parser.add_argument('--fileserver_port', help='FileServer bind port', default=9090, type=int, metavar='port')
         self.parser.add_argument('--ip_local', help='My local ips', default=ip_local, type=int, metavar='ip', nargs='*')
 
         self.parser.add_argument('--disable_udp', help='Disable UDP connections', action='store_true')

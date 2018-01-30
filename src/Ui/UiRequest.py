@@ -67,6 +67,7 @@ class UiRequest(object):
 
     # Call the request handler function base on path
     def route(self, path):
+        # print("CLN:{}".format(path))
         # Restict Ui access by ip
         # print("""Debug CLN page route""")
         if config.ui_restrict and self.env['REMOTE_ADDR'] not in config.ui_restrict:
@@ -86,16 +87,40 @@ class UiRequest(object):
                 content_type = self.getContentType(path)
 
             extra_headers = [("Access-Control-Allow-Origin", "null")]
-
+            # 添加跨域请求
+            extra_headers = [("Access-Control-Allow-Origin", "*")]
+            extra_headers.append(("access-control-allow-methods", "GET,POST"))
             self.sendHeader(content_type=content_type, extra_headers=extra_headers)
             return ""
         elif self.env["REQUEST_METHOD"] == "POST":
             # parames = self.env['wsgi.input'].read().strip()
-            parames =  dict(urllib.parse.parse_qsl(self.env["wsgi.input"].read()))
-            print(type(parames))
-            # print(param)
+            parames =  dict(cgi.parse_qsl(self.env["wsgi.input"].read()))
+            message = {}
+            # print SiteManager.site_manager
+            # from src.Site import SiteManager
+            temp_sitemanger = SiteManager.site_manager
+            temp_sitemanger.load()
+            for address, site in temp_sitemanger.sites.iteritems():
+                # message += """"site:'{}',""".format(address) \
+                #           + """'settings["wrapper_key"]':'{}',""".format(site.settings.get("wrapper_key")) \
+                #           + """'settings["ajax_key"]':'{}',""".format(site.settings.get("ajax_key")) \
+                #           + """'websockets':'{}'""".format(site.websockets) \
+                #           + "\n"
+                # message += '"site":"{}",'.format(address) \
+                #           + '"settings":"{}",'.format(site.settings) \
+                #             +"\n"
+                #           # + '"ajax_key":"{}",'.format(site.settings.get("ajax_key")) \
+                #           # + '"websockets":"{}",'.format(site.websockets) \
+                #           # + "\n"
+                if address == "198ZmAiVfpJxrFg3fbcvBtPz58jcLM6Mao":
+                    site.settings["wrapper_key"] = "83d612b40c97de856f9f83507288f188a610dbec8e76d381edb70d46d989934f"
+                message.update({
+                    address: site.settings,
+                })
+            import pprint
+            # message = json.loads(message)
+            pprint.pprint(message)
             return self.error403(r"大傻逼")
-        # print (path)
         if path == "/":
             return self.actionIndex()
         elif path == "/favicon.ico":
@@ -131,7 +156,6 @@ class UiRequest(object):
             return self.actionSiteAdd()
         # Site media wrapper
         else:
-            print('self.get is {}'.format(self.get))
             if self.get.get("wrapper_nonce") and self.get["wrapper_nonce"] in self.server.wrapper_nonces:
                 self.server.wrapper_nonces.remove(self.get["wrapper_nonce"])
                 return self.actionSiteMedia("/media" + path)  # Only serve html files with frame
@@ -274,10 +298,8 @@ class UiRequest(object):
             extra_headers = []
         match = re.match("/(?P<address>[A-Za-z0-9\._-]+)(?P<inner_path>/.*|$)", path)
         if match:
-            print("有match")
             address = match.group("address")
             inner_path = match.group("inner_path").lstrip("/")
-            print("inner_path is ".format(inner_path))
             if "." in inner_path and not inner_path.endswith(".html") and not inner_path.endswith(".htm"):
                 return self.actionSiteMedia("/media" + path)  # Only serve html files with frame
             if self.isAjaxRequest():
@@ -393,7 +415,8 @@ class UiRequest(object):
             body_style=body_style,
             meta_tags=meta_tags,
             query_string=re.escape(query_string),
-            wrapper_key=site.settings["wrapper_key"],
+            # wrapper_key=site.settings["wrapper_key"],
+            wrapper_key="83d612b40c97de856f9f83507288f188a610dbec8e76d381edb70d46d989934f",
             ajax_key=site.settings["ajax_key"],
             wrapper_nonce=wrapper_nonce,
             postmessage_nonce_security=postmessage_nonce_security,

@@ -85,6 +85,7 @@ class UiServer:
     def handleRequest(self, env, start_response):
         # print('CLN debug env {}'.format(env))
         path = env["PATH_INFO"]
+
         if env.get("QUERY_STRING"):
             get = dict(cgi.parse_qsl(env['QUERY_STRING']))
         else:

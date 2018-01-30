@@ -46,7 +46,7 @@ class UiWebsocket(object):
     def start(self):
         ws = self.ws
         if self.site.address == config.homepage and not self.site.page_requested:
-            print('Debug CLN UiWebsocket, site.address is {}'.format(self.site.address))
+            # print('Debug CLN UiWebsocket, site.address is {}'.format(self.site.address))
             # Add open fileserver port message or closed port error to homepage at first request after start
             self.site.page_requested = True  # Dont add connection notification anymore
             file_server = sys.modules["main"].file_server
