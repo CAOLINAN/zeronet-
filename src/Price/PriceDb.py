@@ -144,8 +144,6 @@ class PriceDb(Db):
 
         return changed_tables
 
-
-
     def setPrice(self, relpath, price):
         if relpath in self.prices.keys():
             temp_price = self.prices.get(relpath)
@@ -153,21 +151,27 @@ class PriceDb(Db):
             self.log.warning("Error get %s from self.prices" % (relpath))
             path = os.path.join(self.site_path, relpath)
             temp_price = Price(path, self.address)
+            temp_price.load()
         temp_price.price = price
-        self.insertOrUpdate("price", {
-            "name": temp_price.name,
-            "relpath": temp_price.relpath,
-            "price": temp_price.price,
-            "size": temp_price.size,
-            "file_type": temp_price.type,
-            "size_files_optional": temp_price.size_files_optional,
-            "size_files": temp_price.size_files,
-            "modified": int(temp_price.modify)
+        try:
+            self.insertOrUpdate("price", {
+                "name": temp_price.name,
+                "relpath": temp_price.relpath,
+                "price": temp_price.price,
+                "size": temp_price.size,
+                "file_type": temp_price.type,
+                "size_files_optional": temp_price.size_files_optional,
+                "size_files": temp_price.size_files,
+                "modified": int(temp_price.modify)
 
-        }, {
-             "rel_path": price.rel_path
-             })
-        self.prices[relpath] = temp_price
+            }, {
+                 "rel_path": price.rel_path
+                 })
+            self.prices[relpath] = temp_price
+            return True
+        except:
+            self.log.error("Error set {}'s price".format(os.path.join(self.address, relpath)))
+            return False
 
     def deletePrice(self, relpath):
         if relpath in self.prices.keys():
@@ -193,7 +197,7 @@ class PriceDb(Db):
             #     "file_type": row["file_type"],
             #     "modified": row["modified"]
             # }
-            path = os.path.join(config.data_dir, self.site_path)
+            path = os.path.join(self.site_path, row["relpath"])
             self.prices[row["relpath"]] = Price(path, self.address)
 
             self.prices[row["relpath"]].priceID = row["price_id"]

@@ -214,25 +214,49 @@ class Actions(object):
         site.saveSettings()     # 更新站点信息到sites.json文件中
 
         logging.info("Site created!")
+
     # 为某个资源定价
-    def setPrice(self, address, data, privatekey=None, inner_path="content.json"):
+    def setPrice(self, address, relpath, price):
         logging.info("set data price...")
+        fprice = 1
+        try:
+            fprice = float(price)
+        except:
+            logging.error("Error set {}'s price: price isn't a num.".format(os.path.join(address, relpath)))
+        while True and fprice:
+            logging.info("Error set {}'s price: price isn't a num.".format(os.path.join(address, relpath)))
         from Site import Site
         from Site import SiteManager
         SiteManager.site_manager.load()
         site = Site(address, allow_create=False)
-        if not privatekey:
-            from User import UserManager
-            user = UserManager.user_manager.get()
-            if user:
-                site_data = user.getSiteData(address)
-                privatekey = site_data.get("privatekey")
-            else:
-                privatekey = None
-            if not privatekey:
-                # Not found in users.json, ask from console
-                import getpass
-                privatekey = getpass.getpass("Private key (input hidden):")
+        if site.price_manger.setPrice(relpath, price):
+            return True
+        else:
+            logging.error("Error set {}'s price: set failed! Please try again.".format(os.path.join(address, relpath)))
+            return False
+
+    # 删除资源价格
+    def delPrice(self, address, relpath):
+        logging.info("set data price...")
+        from Site import Site
+        from Site import SiteManager
+        if not os.path.isdir(os.path.join(config.data_dir, address)):
+            logging.error("Error address:{} isn't an address! Please try again!".format(address))
+            return False
+        if not os.path.isfile(os.path.join(config.data_dir, os.path.join(address, relpath))):
+            logging.error("Error relpath:{} isn't in address! Please try again!".format(address))
+            return False
+        SiteManager.site_manager.load()
+        site = Site(address, allow_create=False)
+        if site.price_manger.delPrice(relpath):
+            return True
+        else:
+            logging.error("Error delete {}'s price: delete failed! Please try again.".format(os.path.join(address, relpath)))
+            return False
+
+    # 列出价格表
+    def listPrice(self, address, relpath):
+        pass
 
     def siteSign(self, address, privatekey=None, inner_path="content.json", publish=False, remove_missing_optional=False):
         from Site import Site
