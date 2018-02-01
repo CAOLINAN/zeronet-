@@ -1,4 +1,3 @@
-# coding=utf-8
 import json
 import time
 import re
@@ -14,7 +13,7 @@ from util import helper
 from util import Diff
 from util import SafeRe
 from Peer import PeerHashfield
-from ContentDbDict import ContentDbDict #加载时会检测数据库，没有则创建默认数据库
+from ContentDbDict import ContentDbDict
 from Plugin import PluginManager
 
 
@@ -32,7 +31,7 @@ class ContentManager(object):
     def __init__(self, site):
         self.site = site
         self.log = self.site.log
-        self.contents = ContentDbDict(site) # 加载数据库，将站点地址插入到数据库中
+        self.contents = ContentDbDict(site)
         self.hashfield = PeerHashfield()
         self.has_optional_files = False
 

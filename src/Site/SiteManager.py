@@ -1,4 +1,3 @@
-# coding=utf-8
 import json
 import logging
 import re
@@ -25,7 +24,6 @@ class SiteManager(object):
         atexit.register(lambda: self.save(recalculate_size=True))
 
     # Load all sites from data/sites.json
-    # 两个插件注册了两个相同的load方法，执行顺序为查找默认的域名系统
     def load(self, cleanup=True, startup=False):
         self.log.debug("Loading sites...")
         self.loaded = False
@@ -56,9 +54,9 @@ class SiteManager(object):
                     added += 1
 
             address_found.append(address)
+
         # Remove deleted adresses
         if cleanup:
-            # print("start clean up")
             for address in self.sites.keys():
                 if address not in address_found:
                     del(self.sites[address])
@@ -80,6 +78,7 @@ class SiteManager(object):
                         del content_db.site_ids[address]
                     if address in content_db.sites:
                         del content_db.sites[address]
+
         if added:
             self.log.debug("SiteManager added %s sites" % added)
         self.loaded = True
@@ -104,7 +103,7 @@ class SiteManager(object):
 
         s = time.time()
         if data:
-            helper.atomicWrite("%s/sites.json" % config.data_dir, json.dumps(data, indent=2, sort_keys=True)) # 保存sites.json文件
+            helper.atomicWrite("%s/sites.json" % config.data_dir, json.dumps(data, indent=2, sort_keys=True))
         else:
             self.log.debug("Save error: No data")
         time_write = time.time() - s
@@ -147,11 +146,11 @@ class SiteManager(object):
             if not self.isAddress(address):
                 return False  # Not address: %s % address
             self.log.debug("Added new site: %s" % address)
-            site = Site(address, settings=settings) # 生成setting信息保存在data字典里预备写入json文件
+            site = Site(address, settings=settings)
             self.sites[address] = site
             if not site.settings["serving"]:  # Maybe it was deleted before
                 site.settings["serving"] = True
-            site.saveSettings() # 保存生成json文件
+            site.saveSettings()
             if all_file:  # Also download user files on first sync
                 site.download(check_size=True, blind_includes=True)
 
@@ -173,4 +172,8 @@ class SiteManager(object):
 
 site_manager = SiteManager()  # Singletone
 
-peer_blacklist = [("127.0.0.1", config.fileserver_port)]  # Dont add this peers
+if config.action == "main":  # Don't connect / add myself to peerlist
+    peer_blacklist = [("127.0.0.1", config.fileserver_port)]
+else:
+    peer_blacklist = []
+

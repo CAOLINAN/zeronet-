@@ -1,4 +1,3 @@
-# coding=utf-8
 import logging
 import time
 import cgi
@@ -83,20 +82,17 @@ class UiServer:
 
     # Handle WSGI request
     def handleRequest(self, env, start_response):
-        # print('CLN debug env {}'.format(env))
         path = env["PATH_INFO"]
-
         if env.get("QUERY_STRING"):
             get = dict(cgi.parse_qsl(env['QUERY_STRING']))
         else:
             get = {}
-        # print("get is {}".format(get))
         ui_request = UiRequest(self, get, env, start_response)
         if config.debug:  # Let the exception catched by werkezung
             return ui_request.route(path)
         else:  # Catch and display the error
             try:
-                return ui_request.route(path)# 根据URL路径路由请求
+                return ui_request.route(path)
             except Exception, err:
                 logging.debug("UiRequest error: %s" % Debug.formatException(err))
                 return ui_request.error500("Err: %s" % Debug.formatException(err))

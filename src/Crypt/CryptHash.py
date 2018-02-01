@@ -64,6 +64,3 @@ class Sha512t:
 
 def sha512t(data=None):
     return Sha512t(data)
-
-
-

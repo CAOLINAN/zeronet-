@@ -1,4 +1,3 @@
-# coding=utf-8
 '''
 Based on the specification at http://bittorrent.org/beps/bep_0015.html
 '''
@@ -77,7 +76,6 @@ class UdpTrackerClient:
 
         values = [args[a] for a in fields.split()]
         payload = struct.pack('!20s20sQQQLLLLH', *values)
-        # print values
         return self._send(ANNOUNCE, payload)
 
     def scrape(self, info_hash_list):
@@ -128,7 +126,6 @@ class UdpTrackerClient:
         }
         self.sock.connect((self.host, self.port))
         self.sock.send(header + payload)
-        # print("Debug CLN send Successful!")
         return trans
 
     def _request_header(self, action):

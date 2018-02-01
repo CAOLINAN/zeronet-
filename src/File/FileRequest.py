@@ -60,10 +60,8 @@ class FileRequest(object):
     def route(self, cmd, req_id, params):
         self.req_id = req_id
         # Don't allow other sites than locked
-        # print("""Debug CLN, route here""")
         if "site" in params and self.connection.target_onion:
             valid_sites = self.connection.getValidSites()
-            print("""valid_sites is {}""".format(valid_sites))
             if params["site"] not in valid_sites:
                 self.response({"error": "Invalid site"})
                 self.connection.log(
@@ -294,7 +292,7 @@ class FileRequest(object):
                 added += 1
 
         # Send back peers that is not in the sent list and connectable (not port 0)
-        packed_peers = helper.packPeers(site.getConnectablePeers(params["need"], got_peer_keys))
+        packed_peers = helper.packPeers(site.getConnectablePeers(params["need"], got_peer_keys, allow_private=False))
 
         if added:
             site.worker_manager.onPeers()

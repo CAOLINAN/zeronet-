@@ -1,4 +1,3 @@
-# coding=utf-8
 import os
 import json
 import logging
@@ -29,7 +28,7 @@ from util import helper
 from util import Diff
 from Plugin import PluginManager
 import SiteManager
-from Price import PriceDb
+
 
 @PluginManager.acceptPlugins
 class Site(object):
@@ -52,14 +51,10 @@ class Site(object):
         self.page_requested = False  # Page viewed in browser
         self.websockets = []  # Active site websocket connections
 
-
         self.connection_server = None
-        self.loadSettings(settings)  # Load settings from sites.json 从sites.json加载站点setting，没有则创建默认setting(还未存入json文件)
+        self.loadSettings(settings)  # Load settings from sites.json
         self.storage = SiteStorage(self, allow_create=allow_create)  # Save and load site files
-        self.content_manager = ContentManager(self) # 加载数据库，将站点地址插入到数据库中
-        # CLN
-        # print("site :   ",self.address)
-        self.price_manger = PriceDb.getPriceDb(self.address)
+        self.content_manager = ContentManager(self)
         self.content_manager.loadContents()  # Load content.json files
         if "main" in sys.modules and "file_server" in dir(sys.modules["main"]):  # Use global file server by default if possible
             self.connection_server = sys.modules["main"].file_server
@@ -95,9 +90,6 @@ class Site(object):
                 settings["size_optional"] = 0
             if "optional_downloaded" not in settings:
                 settings["optional_downloaded"] = 0
-            # CLN
-            # if "price" not in settings:
-            #     settings["price"] = {}
             self.bad_files = settings["cache"].get("bad_files", {})
             settings["cache"]["bad_files"] = {}
             # Give it minimum 10 tries after restart
@@ -112,8 +104,8 @@ class Site(object):
                 self.settings["autodownloadoptional"] = True
 
         # Add admin permissions to homepage
-        # if self.address == config.homepage and "ADMIN" not in self.settings["permissions"]:
-        self.settings["permissions"].append("ADMIN")
+        if self.address == config.homepage and "ADMIN" not in self.settings["permissions"]:
+            self.settings["permissions"].append("ADMIN")
 
         return
 
@@ -124,7 +116,7 @@ class Site(object):
         if not SiteManager.site_manager.sites.get(self.address):
             SiteManager.site_manager.sites[self.address] = self
             SiteManager.site_manager.load(False)
-        SiteManager.site_manager.save() # 计算站点大小、获取缓存更新到setting中并保存至sites.json文件中
+        SiteManager.site_manager.save()
 
     def getSettingsCache(self):
         back = {}
@@ -459,6 +451,8 @@ class Site(object):
             # Failed to query modifications
             self.content_updated = False
             self.bad_files["content.json"] = 1
+        else:
+            self.content_updated = time.time()
 
         self.updateWebsocket(updated=True)
 
@@ -817,7 +811,6 @@ class Site(object):
     # Gather peers from tracker
     # Return: Complete time or False on error
     def announceTracker(self, tracker_protocol, tracker_address, fileserver_port=0, add_types=[], my_peer_id="", mode="start"):
-        # print("""Debug CLN tracker_protocol is {}""".format(tracker_protocol))
         s = time.time()
         if "ip4" not in add_types:
             fileserver_port = 0
@@ -833,10 +826,7 @@ class Site(object):
                 tracker.poll_once()
                 tracker.announce(info_hash=hashlib.sha1(self.address).hexdigest(), num_want=50)
                 back = tracker.poll_once()
-                # print('back is {}'.format(back))
-                # print(back)
                 peers = back["response"]["peers"]
-                # print("""udp tracker:Debug CLN Site, peers is {}""".format(peers))
             except Exception, err:
                 return False
 
@@ -851,11 +841,9 @@ class Site(object):
             try:
                 url = "http://" + tracker_address + "?" + urllib.urlencode(params)
                 # Load url
-                # print(url)
                 with gevent.Timeout(30, False):  # Make sure of timeout
                     req = urllib2.urlopen(url, timeout=25)
                     response = req.read()
-                    # print (response)
                     req.fp._sock.recv = None  # Hacky avoidance of memory leak for older python versions
                     req.close()
                     req = None
@@ -864,7 +852,6 @@ class Site(object):
                     return False
                 # Decode peers
                 peer_data = bencode.decode(response)["peers"]
-                # print("""http tracker:Debug CLN Site,peer_data is {}""".format(peer_data))
                 response = None
                 peer_count = len(peer_data) / 6
                 peers = []
@@ -882,7 +869,6 @@ class Site(object):
         else:
             peers = []
 
-        # print("""Debug CLN start announceTracker successfule peers is {}""".format(peers))
         # Adding peers
         added = 0
         for peer in peers:
@@ -891,7 +877,7 @@ class Site(object):
             if self.addPeer(peer["addr"], peer["port"]):
                 added += 1
         if added:
-            self.worker_manager.onPeers() # 无返回，当前所有节点(peer)每个启动worker去下载
+            self.worker_manager.onPeers()
             self.updateWebsocket(peers_added=added)
             self.log.debug("%s: Found %s peers, new: %s, total: %s" % (tracker_address, len(peers), added, len(self.peers)))
         return time.time() - s
@@ -903,7 +889,6 @@ class Site(object):
         self.time_announce = time.time()
 
         trackers = config.trackers
-        # print("""Debug CLN Site,trackers is {}""".format(trackers))
         # Filter trackers based on supported networks
         if config.disable_udp:
             trackers = [tracker for tracker in trackers if not tracker.startswith("udp://")]
@@ -914,13 +899,13 @@ class Site(object):
             self.last_tracker_id += 1
             self.last_tracker_id = self.last_tracker_id % len(trackers)
             trackers = [trackers[self.last_tracker_id]]  # We only going to use this one
-        # print("""Debug CLN Site,Filter trackers is {}""".format(trackers))
+
         errors = []
         slow = []
         add_types = []
         if self.connection_server:
             my_peer_id = self.connection_server.peer_id
-            # print("""Debug CLN Site,my_peer_id is {}""".format(my_peer_id))
+
             # Type of addresses they can reach me
             if self.connection_server.port_opened:
                 add_types.append("ip4")
@@ -933,12 +918,9 @@ class Site(object):
         announced = 0
         threads = []
         fileserver_port = config.fileserver_port
-        # print
+
         for tracker in trackers:  # Start announce threads
             tracker_protocol, tracker_address = tracker.split("://")
-            # print("""Debug CLN Site, tracker_protocol is {}""".format(tracker_protocol))
-            # if tracker_protocol == 'udp':
-            #     print("""Debug CLN Site,success!!! {}""".format(fileserver_port, trackers))
             thread = gevent.spawn(
                 self.announceTracker, tracker_protocol, tracker_address, fileserver_port, add_types, my_peer_id, mode
             )
@@ -948,10 +930,8 @@ class Site(object):
 
         gevent.joinall(threads, timeout=10)  # Wait for announce finish
 
-
         for thread in threads:
             if thread.value:
-                # print ("Debug CLN Site Announce thread and thread's value is {}!".format(thread.value))
                 if thread.value > 1:
                     slow.append("%.2fs %s://%s" % (thread.value, thread.tracker_protocol, thread.tracker_address))
                 announced += 1
@@ -964,18 +944,18 @@ class Site(object):
         # Save peers num
         self.settings["peers"] = len(self.peers)
 
-        # print ("Debug CLN Site Announce errors's num is {} and errors is {}!".format(len(errors), errors))
-        # print ("Debug CLN Site Announce threads's num is {} !".format(len(threads)))
         if len(errors) < len(threads):  # Less errors than total tracker nums
+            if announced == 1:
+                announced_to = trackers[0]
+            else:
+                announced_to = "%s trackers" % announced
             self.log.debug(
-                "Announced types %s in mode %s to %s trackers in %.3fs, errors: %s, slow: %s" %
-                (add_types, mode, announced, time.time() - s, errors, slow)
+                "Announced types %s in mode %s to %s in %.3fs, errors: %s, slow: %s" %
+                (add_types, mode, announced_to, time.time() - s, errors, slow)
             )
-            # print ("Debug CLN Announce successful !")
         else:
             if mode != "update":
                 self.log.error("Announce to %s trackers in %.3fs, failed" % (announced, time.time() - s))
-            # print ("Debug CLN Announce,mode isn't update")
 
         if pex:
             if not [peer for peer in self.peers.values() if peer.connection and peer.connection.connected]:
@@ -1016,7 +996,7 @@ class Site(object):
         return connected
 
     # Return: Probably peers verified to be connectable recently
-    def getConnectablePeers(self, need_num=5, ignore=[]):
+    def getConnectablePeers(self, need_num=5, ignore=[], allow_private=True):
         peers = self.peers.values()
         found = []
         for peer in peers:
@@ -1029,12 +1009,19 @@ class Site(object):
             if time.time() - peer.connection.last_recv_time > 60 * 60 * 2:  # Last message more than 2 hours ago
                 peer.connection = None  # Cleanup: Dead connection
                 continue
+            if not allow_private and helper.isPrivateIp(peer.ip):
+                continue
             found.append(peer)
             if len(found) >= need_num:
                 break  # Found requested number of peers
 
         if len(found) < need_num:  # Return not that good peers
-            found = [peer for peer in peers if not peer.key.endswith(":0") and peer.key not in ignore][0:need_num - len(found)]
+            found = [
+                peer for peer in peers
+                if not peer.key.endswith(":0") and
+                peer.key not in ignore and
+                (allow_private or not helper.isPrivateIp(peer.ip))
+            ][0:need_num - len(found)]
 
         return found
 
@@ -1050,19 +1037,21 @@ class Site(object):
 
     def getConnectedPeers(self):
         back = []
-        tor_manager = self.connection_server.tor_manager # self.connection 为fileserver,src/File/FileServer.py
-        for connection in self.connection_server.connections: # connections为Connection实例，src/Connection/Connection.py
+        if not self.connection_server:
+            return []
+
+        tor_manager = self.connection_server.tor_manager
+        for connection in self.connection_server.connections:
             if not connection.connected and time.time() - connection.start_time > 20:  # Still not connected after 20s
                 continue
-            peer = self.peers.get("%s:%s" % (connection.ip, connection.port)) # 返回Peer实例 /src/Peer/Peer.py
+            peer = self.peers.get("%s:%s" % (connection.ip, connection.port))
             if peer:
                 if connection.target_onion and tor_manager.start_onions and tor_manager.getOnion(self.address) != connection.target_onion:
-                    # target_onion为洋葱地址，忽略
                     continue
                 if not peer.connection:
                     peer.connect(connection)
                 back.append(peer)
-        return back # 返回peer实例列表
+        return back
 
     # Cleanup probably dead peers and close connection if too much
     def cleanupPeers(self, peers_protected=[]):
@@ -1125,7 +1114,8 @@ class Site(object):
                 if sent >= limit:
                     break
         if sent:
-            self.log.debug("Sent my hashfield to %s peers" % sent)
+            my_hashfield_changed = self.content_manager.hashfield.time_changed
+            self.log.debug("Sent my hashfield (chaged %.3fs ago) to %s peers" % (time.time() - my_hashfield_changed, sent))
         return sent
 
     # Update hashfield

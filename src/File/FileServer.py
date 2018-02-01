@@ -7,7 +7,7 @@ import random
 
 import gevent
 
-import util as util
+import util
 from Config import config
 from FileRequest import FileRequest
 from Site import SiteManager
@@ -33,7 +33,6 @@ class FileServer(ConnectionServer):
 
     # Handle request to fileserver
     def handleRequest(self, connection, message):
-        # print("Debug CLN handleRequest,connection is {} message is {}".format(connection, message))
         if config.verbose:
             if "params" in message:
                 self.log.debug(
@@ -91,7 +90,7 @@ class FileServer(ConnectionServer):
         if not port:
             port = self.port
         back = self.testOpenportPortchecker(port)
-        if back["result"] is not True and use_alternative:  # If no success try alternative checker
+        if (back["result"] is not True and use_alternative) or back["result"] is None:  # If no success try alternative checker
             back = self.testOpenportCanyouseeme(port)
 
         if self.ui_server:
@@ -144,8 +143,7 @@ class FileServer(ConnectionServer):
             message = re.match('.*<div id="results-wrapper">(.*?)</div>', data, re.DOTALL).group(1)
             message = re.sub("<.*?>", "", message.replace("<br>", " ").replace("&nbsp;", " ").strip())  # Strip http tags
         except Exception, err:
-            message = "Error: %s" % Debug.formatException(err)
-            data = ""
+            return {"result": None, "message": Debug.formatException(err)}
 
         if "open" not in message:
             if config.tor != "always":
@@ -161,7 +159,6 @@ class FileServer(ConnectionServer):
             return {"result": False, "message": message}
         else:
             self.log.info("[OK :)] Port open: %s" % message)
-            # print "CLN Debug: port is {} and self.port is {}".format(port, self.port)
             if port == self.port:  # Self port, update port_opened status
                 self.port_opened = True
                 match = re.match(".*targetIP.*?value=\"(.*?)\"", data, re.DOTALL)  # Try find my external ip in message
@@ -179,7 +176,7 @@ class FileServer(ConnectionServer):
             message = re.match('.*<p style="padding-left:15px">(.*?)</p>', data, re.DOTALL).group(1)
             message = re.sub("<.*?>", "", message.replace("<br>", " ").replace("&nbsp;", " "))  # Strip http tags
         except Exception, err:
-            message = "Error: %s" % Debug.formatException(err)
+            return {"result": None, "message": Debug.formatException(err)}
 
         if "Success" not in message:
             if config.tor != "always":
@@ -277,9 +274,12 @@ class FileServer(ConnectionServer):
                     site.retryBadFiles()
 
                 if not startup:  # Don't do it at start up because checkSite already has needConnections at start up.
-                    connected_num = site.needConnections(check_site_on_reconnect=True)  # Keep active peer connection to get the updates
-                    if connected_num < config.connected_limit:  # This site has small amount of peers, protect them from closing
-                        peers_protected.update([peer.key for peer in site.getConnectedPeers()])
+                    if time.time() - site.settings.get("modified", 0) < 60 * 60 * 24 * 7:
+                        # Keep active connections if site has been modified witin 7 days
+                        connected_num = site.needConnections(check_site_on_reconnect=True)
+
+                        if connected_num < config.connected_limit:  # This site has small amount of peers, protect them from closing
+                            peers_protected.update([peer.key for peer in site.getConnectedPeers()])
 
                 time.sleep(1)  # Prevent too quick request
 
@@ -295,22 +295,16 @@ class FileServer(ConnectionServer):
 
     # Announce sites every 20 min
     def announceSites(self):
-        # print("Debug CLN announceSites,config.trackers_file is {}".format(config.trackers_file))
         if config.trackers_file:
             gevent.spawn(self.trackersFileReloader)
 
         time.sleep(5 * 60)  # Sites already announced on startup
         while 1:
             s = time.time()
-            # import datetime
-            # temp_time = datetime.datetime.now()
-            # print("time is {}:Debug CLN announceSites,self.sites.items() is {}".format(temp_time, self.sites.items()))
             for address, site in self.sites.items():
                 if not site.settings["serving"]:
                     continue
                 site.announce(mode="update", pex=False)
-                # if address != "1Name2NXVi1RDPDgf5617UoW7xA6YrhM9F":
-                #     print("""Debug CLN announceSites,site.address is {}""".format(address))
                 active_site = time.time() - site.settings.get("modified", 0) < 24 * 60 * 60
                 if site.settings["own"] or active_site:  # Check connections more frequently on own and active sites to speed-up first connections
                     site.needConnections(check_site_on_reconnect=True)

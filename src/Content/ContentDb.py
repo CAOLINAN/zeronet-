@@ -1,5 +1,3 @@
-# coding=utf-8
-
 import time
 import os
 
@@ -16,7 +14,7 @@ class ContentDb(Db):
         self.foreign_keys = True
         try:
             self.schema = self.getSchema()
-            self.checkTables() # 创建数据库
+            self.checkTables()
         except Exception, err:
             self.log.error("Error loading content.db: %s, rebuilding..." % Debug.formatException(err))
             self.close()
@@ -96,8 +94,7 @@ class ContentDb(Db):
             "modified": int(content.get("modified", 0))
         }, {
             "site_id": self.site_ids.get(site.address, 0),
-            "inner_path": inner_path,
-            # "price_path": price_path
+            "inner_path": inner_path
         })
 
     def deleteContent(self, site, inner_path):
@@ -108,7 +105,7 @@ class ContentDb(Db):
             "SELECT GROUP_CONCAT(inner_path, '|') AS inner_paths FROM content WHERE ?",
             {"site_id": self.site_ids.get(site.address, 0)}
         )
-        row = res.fetchone() # 获取结果集中的下一行
+        row = res.fetchone()
         if row and row["inner_paths"]:
             inner_paths = row["inner_paths"].split("|")
             return dict.fromkeys(inner_paths, False)
@@ -138,7 +135,7 @@ class ContentDb(Db):
 
 content_dbs = {}
 
-# 检查数据库文件是否存在，否则创建数据库
+
 def getContentDb(path=None):
     if not path:
         path = "%s/content.db" % config.data_dir

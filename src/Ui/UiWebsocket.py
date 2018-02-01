@@ -1,4 +1,3 @@
-# coding=utf-8
 import json
 import time
 import sys
@@ -46,7 +45,6 @@ class UiWebsocket(object):
     def start(self):
         ws = self.ws
         if self.site.address == config.homepage and not self.site.page_requested:
-            # print('Debug CLN UiWebsocket, site.address is {}'.format(self.site.address))
             # Add open fileserver port message or closed port error to homepage at first request after start
             self.site.page_requested = True  # Dont add connection notification anymore
             file_server = sys.modules["main"].file_server
@@ -60,7 +58,6 @@ class UiWebsocket(object):
 
         for notification in self.site.notifications:  # Send pending notification messages
             # send via WebSocket
-            print("""Debug CLN Websockert,notification is {}""".format(notification))
             self.cmd("notification", notification)
             # just in case, log them to terminal
             if notification[0] == "error":
@@ -162,7 +159,7 @@ class UiWebsocket(object):
             return True
 
     # Has permission to access a site
-    def hasSitePermission(self, address):
+    def hasSitePermission(self, address, cmd=None):
         if address != self.site.address and "ADMIN" not in self.site.settings["permissions"]:
             return False
         else:
@@ -243,7 +240,6 @@ class UiWebsocket(object):
             return self.response(req["id"], {"error": "You don't have permission to run %s" % cmd})
         else:  # Normal command
             func_name = "action" + cmd[0].upper() + cmd[1:]
-            # print("""Debug CLN func_name is {}""".format(func_name))
             func = getattr(self, func_name, None)
             if not func:  # Unknown command
                 self.response(req["id"], {"error": "Unknown command: %s" % cmd})
@@ -327,7 +323,7 @@ class UiWebsocket(object):
     # - Actions -
 
     def actionAs(self, to, address, cmd, params=[]):
-        if not self.hasSitePermission(address):
+        if not self.hasSitePermission(address, cmd=cmd):
             return self.response(to, "No permission for site %s" % address)
         req_self = copy.copy(self)
         req_self.site = self.server.sites.get(address)
@@ -350,7 +346,6 @@ class UiWebsocket(object):
     # Send site details
     def actionSiteInfo(self, to, file_status=None):
         ret = self.formatSiteInfo(self.site)
-        # print("""Debug CLN ret is {}""".format(ret))
         if file_status:  # Client queries file status
             if self.site.storage.isFile(file_status):  # File exist, add event done
                 ret["event"] = ("file_done", file_status)
@@ -423,6 +418,16 @@ class UiWebsocket(object):
             self.response(to, "ok")
         else:
             return inner_path
+
+    # some functions about price
+    def actionSetPrice(self, to, privatekey=None):
+        pass
+
+    def actionDeletePrice(self):
+        pass
+
+    def actionListPrice(self):
+        pass
 
     # Sign and publish content.json
     def actionSitePublish(self, to, privatekey=None, inner_path="content.json", sign=True):
@@ -553,6 +558,7 @@ class UiWebsocket(object):
         for ws in self.site.websockets:
             if ws != self:
                 ws.event("siteChanged", self.site, {"event": ["file_done", inner_path]})
+
 
     def actionFileDelete(self, to, inner_path):
         if (

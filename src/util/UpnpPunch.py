@@ -339,7 +339,6 @@ def _communicate_with_igd(port=15441,
 
 
 def ask_to_open_port(port=15441, desc="UpnpPunch", retries=3, protos=("TCP", "UDP")):
-    # print("Debug CLN:hello {}".format(port))
     logging.debug("Trying to open port %d." % port)
     _communicate_with_igd(port=port,
                           desc=desc,

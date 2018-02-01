@@ -1,4 +1,3 @@
-# coding=utf-8
 # @File  : PriceDb.py
 # @Author: PuJi
 # @Date  : 2018/1/19 0019
@@ -11,10 +10,8 @@ import logging
 
 class Price(object):
 
-    def __init__(self, path, address):
+    def __init__(self, path):
         self.path = path
-        self.address = address
-        self.relpath = None
         self.name = None
         self.size_files_optional = None
         self.type = None
@@ -25,40 +22,38 @@ class Price(object):
         self.price = 0
 
     def load(self):
-        self.relpath = self.getRelpath()
         self.name = self.getName()
         self.type = self.getType()
         self.size = self.getSize()
-        self.modify = time.time()
+        self.modify = int(time.time())
 
     def reload(self):
-        # 重新加载大小和修改时间
+        # reload size and modify time
         self.size = self.getSize()
-        self.modify = time.time()
-
-    def getRelpath(self):
-        if os.path.isfile(self.path):
-            data_address = os.path.join(config.data_dir, self.address)
-            return os.path.relpath(self.path, data_address)
-        else:
-            return None
+        self.modify = int(time.time())
 
     def getName(self):
         if os.path.isfile(self.path):
-            return os.path.split(self.relpath)[-1]
+            fullname = os.path.split(self.path)[-1]
+            if '.' in fullname:
+                return fullname.split('.')[0]
+            else:
+                return fullname
         else:
             return None
 
     def getType(self):
-        if os.path.isfile(self.path) and '.' in self.path:
-            return self.relpath.split('.')[-1]
+        if os.path.isfile(self.path):
+            return os.path.splitext(self.path)[-1][1:]
         else:
             return None
 
     # return size of files in kb
     def getSize(self):
         if os.path.isfile(self.path):
-            self.size = os.path.getsize(self.path)
+            return os.path.getsize(self.path)
+        else:
+            return None
 
 
 class PriceDb(Db):
@@ -72,14 +67,14 @@ class PriceDb(Db):
         self.foreign_keys = True
         try:
             self.schema = self.getSchema()
-            self.checkTables() # 创建数据表
+            self.checkTables() # create database
         except Exception, err:
             self.log.error("Error loading price.db: %s, rebuilding..." % Debug.formatException(err))
             self.close()
             os.unlink(self.dbpath)  # Remove and try again
             self.schema = self.getSchema()
             self.checkTables()
-        self.prices = {} # 一条价格记录为一个price，格式为{"relpath"：price}
+        self.prices = {} # a record is a price, type is {"relpath:price}
 
     def getSchema(self):
         schema = {}
@@ -89,8 +84,8 @@ class PriceDb(Db):
 
         schema["tables"]["price"] = {
             "cols": [
-                ["price_id", "INTEGER PRIMARY KEY AUTOINCREMENT"],# 设置priceID为自增，不考虑设置ID值
-                ["rel_path", "TEXT UNIQUE NOT NULL"],
+                ["price_id", "INTEGER PRIMARY KEY AUTOINCREMENT"],# set priceID increase self,so don't care this value
+                ["path", "TEXT UNIQUE NOT NULL"],
                 ["name","TEXT"],
                 ["size", "INTEGER"],
                 ["price", "REAL"],
@@ -100,7 +95,7 @@ class PriceDb(Db):
                 ["modified", "INTEGER"]
             ],
             "indexes": [
-                "CREATE UNIQUE INDEX price_key ON price (rel_path)",
+                "CREATE UNIQUE INDEX price_key ON price (path)",
                 "CREATE INDEX price_modified ON price (modified)"
             ],
             "schema_changed": 1
@@ -144,19 +139,18 @@ class PriceDb(Db):
 
         return changed_tables
 
-    def setPrice(self, relpath, price):
-        if relpath in self.prices.keys():
-            temp_price = self.prices.get(relpath)
+    def setPrice(self, path, price):
+        if path in self.prices.keys():
+            temp_price = self.prices.get(path)
         else:
-            self.log.warning("Error get %s from self.prices" % (relpath))
-            path = os.path.join(self.site_path, relpath)
-            temp_price = Price(path, self.address)
+            self.log.warning("Error get %s from self.prices" % (path))
+            temp_price = Price(path)
             temp_price.load()
         temp_price.price = price
         try:
             self.insertOrUpdate("price", {
                 "name": temp_price.name,
-                "relpath": temp_price.relpath,
+                "path": temp_price.path,
                 "price": temp_price.price,
                 "size": temp_price.size,
                 "file_type": temp_price.type,
@@ -165,26 +159,27 @@ class PriceDb(Db):
                 "modified": int(temp_price.modify)
 
             }, {
-                 "rel_path": price.rel_path
+                 "path": temp_price.path
                  })
-            self.prices[relpath] = temp_price
+            self.prices[path] = temp_price
             return True
-        except:
-            self.log.error("Error set {}'s price".format(os.path.join(self.address, relpath)))
+        except Exception as e:
+            print e
+            self.log.error("Error set {}'s price".format(os.path.join(self.address, path)))
             return False
 
-    def deletePrice(self, relpath):
-        if relpath in self.prices.keys():
-            self.prices.pop(relpath)
-            self.log.info("Delete %s from self.prices success" % (relpath))
+    def deletePrice(self, path):
+        if path in self.prices.keys():
+            self.prices.pop(path)
+            self.log.info("Delete %s from self.prices success" % (path))
         else:
             # self.log
-            self.log.warning("There is not %s in self.prices success" % (relpath))
-        if self.execute("DELETE FROM price WHERE ?", {"rel_path": relpath}):
-            self.log.info("Delete %s from self.prices success" % (relpath))
+            self.log.warning("There is not %s in self.prices success" % (path))
+        if self.execute("DELETE FROM price WHERE ?", {"path": path}):
+            self.log.info("Delete %s from self.prices success" % (path))
             return True
         else:
-            self.log.error("Delete %s from self.prices faild!" % (relpath))
+            self.log.error("Delete %s from self.prices faild!" % (path))
             return False
 
     def loadPrices(self):
@@ -197,28 +192,28 @@ class PriceDb(Db):
             #     "file_type": row["file_type"],
             #     "modified": row["modified"]
             # }
-            path = os.path.join(self.site_path, row["relpath"])
-            self.prices[row["relpath"]] = Price(path, self.address)
+            path = os.path.join(self.site_path, row["path"])
+            self.prices[row["path"]] = Price(path)
 
-            self.prices[row["relpath"]].priceID = row["price_id"]
-            self.prices[row["relpath"]].relpath = row["relpath"]
-            self.prices[row["relpath"]].name = row["name"]
-            self.prices[row["relpath"]].size = row["size"]
-            self.prices[row["relpath"]].price = row["price"]
-            self.prices[row["relpath"]].size_files = row["size_files"]
-            self.prices[row["relpath"]].size_files_optional = row["size_files_optional"]
-            self.prices[row["relpath"]].type = row["file_type"]
-            self.prices[row["relpath"]].modified = row["modified"]
+            self.prices[row["path"]].priceID = row["price_id"]
+            self.prices[row["path"]].relpath = row["path"]
+            self.prices[row["path"]].name = row["name"]
+            self.prices[row["path"]].size = row["size"]
+            self.prices[row["path"]].price = row["price"]
+            self.prices[row["path"]].size_files = row["size_files"]
+            self.prices[row["path"]].size_files_optional = row["size_files_optional"]
+            self.prices[row["path"]].type = row["file_type"]
+            self.prices[row["path"]].modified = row["modified"]
 
-    def getSetting(self, relpath):
-        if relpath in self.prices.keys():
-            return self.prices.get(relpath)
+    def getSetting(self, path):
+        if path in self.prices.keys():
+            return self.prices.get(path)
         else:
             res = self.execute(
                 "SELECT * FROM price WHERE ?",
-                {"rel_path": relpath}
+                {"path": path}
             )
-            row = res.fetchone()  # 获取结果集中的下一行
+            row = res.fetchone()  # get result
             if row:
                 return row
             else:
@@ -226,7 +221,7 @@ class PriceDb(Db):
 
 price_dbs = {}
 
-# 检查数据库文件是否存在，否则创建数据库
+# check the sqlite3 is existed, otherwise create database
 def getPriceDb(address=config.homepage):
 
     address_dir = os.path.join(config.data_dir, address)

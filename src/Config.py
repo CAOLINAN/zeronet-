@@ -9,8 +9,8 @@ import ConfigParser
 class Config(object):
 
     def __init__(self, argv):
-        self.version = "0.6.0"
-        self.rev = 3177
+        self.version = "0.6.1"
+        self.rev = 3234
         self.argv = argv
         self.action = None
         self.config_file = "zeronet.conf"
@@ -35,29 +35,12 @@ class Config(object):
         trackers = [
             "zero://boot3rdez4rzn36x.onion:15441",
             "zero://zero.booth.moe#f36ca555bee6ba216b14d10f38c16f7769ff064e0e37d887603548cc2e64191d:15441",
-            "udp://tracker.coppersurfer.tk:6969",   # germany
-            "udp://tracker.leechers-paradise.org:6969", # Netherlands
-            "udp://9.rarbg.com:2710", # Italy
+            "udp://tracker.coppersurfer.tk:6969",
+            "udp://tracker.leechers-paradise.org:6969",
+            "udp://9.rarbg.com:2710",
             "http://tracker.opentrackr.org:1337/announce",
             "http://explodie.org:6969/announce",
-            "http://tracker1.wasabii.com.tw:6969/announce",
-            # 'http://192.168.14.40:8080/announce'
-            # 'udp:///18.217.92.175:8000'
-            # 'http://18.217.92.175:8000',
-            # 'http://18.217.92.175:8000/announce'
-            # 'http://192.168.14.40:8080/announce',
-            # 'udp://192.168.14.40:8080'
-            # 'udp://18.216.49.131:6969',
-            # 'http://18.216.49.131:6969/announce'
-            # 'http://47.104.186.14:8000/announce',
-            # 'udp://47.104.186.14:8000',
-            # 'udp://47.104.186.14:8000',
-            # 'ws://47.104.186.14:8000',
-            # 'zero://47.104.186.14:8001'
-            # 'http://192.168.14.240:6969/announce',
-            # 'http://192.168.14.201:7777/announce'
-            # 'zero://47.104.186.14:8001'
-            # 'udp://47.104.186.14:8000'
+            "http://retracker.spark-rostov.ru:80/announce"
         ]
         # Platform specific
         if sys.platform.startswith("win"):
@@ -140,7 +123,7 @@ class Config(object):
         action.add_argument('peer_ip', help='Peer ip to publish (default: random peers ip from tracker)',
                             default=None, nargs='?')
         action.add_argument('peer_port', help='Peer port to publish (default: random peer port from tracker)',
-                            default=15442, nargs='?')
+                            default=15441, nargs='?')
         action.add_argument('--inner_path', help='Content.json you want to publish (default: content.json)',
                             default="content.json", metavar="inner_path")
 
@@ -190,13 +173,13 @@ class Config(object):
 
         action = self.subparsers.add_parser("getConfig", help='Return json-encoded info')
         action = self.subparsers.add_parser("testConnection", help='Testing')
+        action = self.subparsers.add_parser("testAnnounce", help='Testing')
 
         # Config parameters
         self.parser.add_argument('--verbose', help='More detailed logging', action='store_true')
         self.parser.add_argument('--debug', help='Debug mode', action='store_true')
         self.parser.add_argument('--silent', help='Disable logging to terminal output', action='store_true')
         self.parser.add_argument('--debug_socket', help='Debug socket connections', action='store_true')
-        self.parser.add_argument('--debug_gevent', help='Debug gevent functions', action='store_true')
 
         self.parser.add_argument('--batch', help="Batch mode (No interactive input for commands)", action='store_true')
 
@@ -206,7 +189,7 @@ class Config(object):
 
         self.parser.add_argument('--language', help='Web interface language', default=language, metavar='language')
         self.parser.add_argument('--ui_ip', help='Web interface bind address', default="127.0.0.1", metavar='ip')
-        self.parser.add_argument('--ui_port', help='Web interface bind port', default=43111, type=int, metavar='port')
+        self.parser.add_argument('--ui_port', help='Web interface bind port', default=43110, type=int, metavar='port')
         self.parser.add_argument('--ui_restrict', help='Restrict web access', default=False, metavar='ip', nargs='*')
         self.parser.add_argument('--ui_host', help='Allow access using this hosts', metavar='host', nargs='*')
 
@@ -219,10 +202,11 @@ class Config(object):
         self.parser.add_argument('--size_limit', help='Default site size limit in MB', default=10, type=int, metavar='limit')
         self.parser.add_argument('--file_size_limit', help='Maximum per file size limit in MB', default=10, type=int, metavar='limit')
         self.parser.add_argument('--connected_limit', help='Max connected peer per site', default=8, type=int, metavar='connected_limit')
+        self.parser.add_argument('--global_connected_limit', help='Max connections', default=512, type=int, metavar='global_connected_limit')
         self.parser.add_argument('--workers', help='Download workers per site', default=5, type=int, metavar='workers')
 
         self.parser.add_argument('--fileserver_ip', help='FileServer bind address', default="*", metavar='ip')
-        self.parser.add_argument('--fileserver_port', help='FileServer bind port', default=9090, type=int, metavar='port')
+        self.parser.add_argument('--fileserver_port', help='FileServer bind port', default=15441, type=int, metavar='port')
         self.parser.add_argument('--ip_local', help='My local ips', default=ip_local, type=int, metavar='ip', nargs='*')
 
         self.parser.add_argument('--disable_udp', help='Disable UDP connections', action='store_true')
@@ -325,13 +309,11 @@ class Config(object):
             self.parser.exit = lambda *args, **kwargs: silencer(self.parser, "exit")
 
         argv = self.argv[:]  # Copy command line arguments
-        # resolv commands
         self.parseCommandline(argv, silent)  # Parse argv
         self.setAttributes()
-        # load config file
         if parse_config:
             argv = self.parseConfig(argv)  # Add arguments from config file
-        # resolv commands
+
         self.parseCommandline(argv, silent)  # Parse argv
         self.setAttributes()
 

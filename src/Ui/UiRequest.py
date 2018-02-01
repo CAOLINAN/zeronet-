@@ -1,11 +1,10 @@
-# coding=utf-8
 import time
 import re
 import os
 import mimetypes
 import json
-# import urllib.parse
 import cgi
+
 from Config import config
 from Site import SiteManager
 from User import UserManager
@@ -67,9 +66,7 @@ class UiRequest(object):
 
     # Call the request handler function base on path
     def route(self, path):
-        # print("CLN:{}".format(path))
         # Restict Ui access by ip
-        # print("""Debug CLN page route""")
         if config.ui_restrict and self.env['REMOTE_ADDR'] not in config.ui_restrict:
             return self.error403(details=False)
 
@@ -87,40 +84,10 @@ class UiRequest(object):
                 content_type = self.getContentType(path)
 
             extra_headers = [("Access-Control-Allow-Origin", "null")]
-            # 添加跨域请求
-            extra_headers = [("Access-Control-Allow-Origin", "*")]
-            extra_headers.append(("access-control-allow-methods", "GET,POST"))
+
             self.sendHeader(content_type=content_type, extra_headers=extra_headers)
             return ""
-        elif self.env["REQUEST_METHOD"] == "POST":
-            # parames = self.env['wsgi.input'].read().strip()
-            parames =  dict(cgi.parse_qsl(self.env["wsgi.input"].read()))
-            message = {}
-            # print SiteManager.site_manager
-            # from src.Site import SiteManager
-            temp_sitemanger = SiteManager.site_manager
-            temp_sitemanger.load()
-            for address, site in temp_sitemanger.sites.iteritems():
-                # message += """"site:'{}',""".format(address) \
-                #           + """'settings["wrapper_key"]':'{}',""".format(site.settings.get("wrapper_key")) \
-                #           + """'settings["ajax_key"]':'{}',""".format(site.settings.get("ajax_key")) \
-                #           + """'websockets':'{}'""".format(site.websockets) \
-                #           + "\n"
-                # message += '"site":"{}",'.format(address) \
-                #           + '"settings":"{}",'.format(site.settings) \
-                #             +"\n"
-                #           # + '"ajax_key":"{}",'.format(site.settings.get("ajax_key")) \
-                #           # + '"websockets":"{}",'.format(site.websockets) \
-                #           # + "\n"
-                if address == "198ZmAiVfpJxrFg3fbcvBtPz58jcLM6Mao":
-                    site.settings["wrapper_key"] = "83d612b40c97de856f9f83507288f188a610dbec8e76d381edb70d46d989934f"
-                message.update({
-                    address: site.settings,
-                })
-            import pprint
-            # message = json.loads(message)
-            pprint.pprint(message)
-            return self.error403(r"大傻逼")
+
         if path == "/":
             return self.actionIndex()
         elif path == "/favicon.ico":
@@ -296,6 +263,7 @@ class UiRequest(object):
     def actionWrapper(self, path, extra_headers=None):
         if not extra_headers:
             extra_headers = []
+
         match = re.match("/(?P<address>[A-Za-z0-9\._-]+)(?P<inner_path>/.*|$)", path)
         if match:
             address = match.group("address")
@@ -332,7 +300,6 @@ class UiRequest(object):
             # Make response be sent at once (see https://github.com/HelloZeroNet/ZeroNet/issues/1092)
 
         else:  # Bad url
-            print("没match")
             return False
 
     def getSiteUrl(self, address):
@@ -415,8 +382,7 @@ class UiRequest(object):
             body_style=body_style,
             meta_tags=meta_tags,
             query_string=re.escape(query_string),
-            # wrapper_key=site.settings["wrapper_key"],
-            wrapper_key="83d612b40c97de856f9f83507288f188a610dbec8e76d381edb70d46d989934f",
+            wrapper_key=site.settings["wrapper_key"],
             ajax_key=site.settings["ajax_key"],
             wrapper_nonce=wrapper_nonce,
             postmessage_nonce_security=postmessage_nonce_security,
@@ -461,6 +427,8 @@ class UiRequest(object):
             path_parts = match.groupdict()
             path_parts["request_address"] = path_parts["address"]  # Original request address (for Merger sites)
             path_parts["inner_path"] = path_parts["inner_path"].lstrip("/")
+            if not path_parts["inner_path"]:
+                path_parts["inner_path"] = "index.html"
             return path_parts
         else:
             return None
@@ -671,10 +639,12 @@ class UiRequest(object):
         sites = self.server.sites
         main = sys.modules["main"]
 
-        def bench(code, times=100):
+        def bench(code, times=100, init=None):
             sites = self.server.sites
             main = sys.modules["main"]
             s = time.time()
+            if init:
+                eval(compile(init, '<string>', 'exec'), globals(), locals())
             for _ in range(times):
                 back = eval(code, globals(), locals())
             return ["%s run: %.3fs" % (times, time.time() - s), back]
@@ -697,7 +667,6 @@ class UiRequest(object):
     def error400(self, message=""):
         self.sendHeader(400)
         return self.formatError("Bad Request", message)
-
 
     # You are not allowed to access this
     def error403(self, message="", details=True):

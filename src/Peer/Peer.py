@@ -1,5 +1,3 @@
-# coding=utf-8
-
 import logging
 import time
 import sys
@@ -73,6 +71,7 @@ class Peer(object):
             self.log("Getting connection...")
 
         if connection:  # Connection specified
+            self.log("Assigning connection %s" % connection)
             self.connection = connection
             self.connection.sites += 1
         else:  # Try to find from connection pool or create new connection
@@ -133,7 +132,7 @@ class Peer(object):
             try:
                 if not self.connection:
                     raise Exception("No connection found")
-                res = self.connection.request(cmd, params, stream_to) # 该方法核心,底层调用src\util\StreamingMsgpack.py的stream
+                res = self.connection.request(cmd, params, stream_to)
                 if not res:
                     raise Exception("Send error")
                 if "error" in res:
@@ -174,7 +173,7 @@ class Peer(object):
             read_bytes = max_read_size
 
         location = pos_from
-        # 判断配置是否使用模板文件
+
         if config.use_tempfiles:
             buff = tempfile.SpooledTemporaryFile(max_size=16 * 1024, mode='w+b')
         else:
@@ -244,7 +243,7 @@ class Peer(object):
             site = self.site  # If no site defined request peers for this site
 
         # give back 5 connectible peers
-        packed_peers = helper.packPeers(self.site.getConnectablePeers(5))
+        packed_peers = helper.packPeers(self.site.getConnectablePeers(5, allow_private=False))
         request = {"site": site.address, "peers": packed_peers["ip4"], "need": need_num}
         if packed_peers["onion"]:
             request["peers_onion"] = packed_peers["onion"]
@@ -290,7 +289,7 @@ class Peer(object):
     # Return: {hash1: ["ip:port", "ip:port",...],...}
     def findHashIds(self, hash_ids):
         res = self.request("findHashIds", {"site": self.site.address, "hash_ids": hash_ids})
-        if not res or "error" in res:
+        if not res or "error" in res or type(res) is not dict:
             return False
         # Unpack IP4
         back = {key: map(helper.unpackAddress, val) for key, val in res["peers"].items()[0:30]}

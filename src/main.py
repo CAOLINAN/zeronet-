@@ -1,4 +1,3 @@
-# coding=utf-8
 # Included modules
 import os
 import sys
@@ -25,7 +24,6 @@ update_after_shutdown = False  # If set True then update and restart zeronet aft
 # Load config
 from Config import config
 config.parse(silent=True)  # Plugins need to access the configuration
-
 if not config.arguments:  # Config parse failed, show the help screen and exit
     config.parse()
 
@@ -44,7 +42,6 @@ if not os.path.isdir(config.data_dir):
     except Exception as err:
         print "Can't change permission of %s: %s" % (config.data_dir, err)
 
-# 创建默认sites.json和users.json文件
 if not os.path.isfile("%s/sites.json" % config.data_dir):
     open("%s/sites.json" % config.data_dir, "w").write("{}")
 if not os.path.isfile("%s/users.json" % config.data_dir):
@@ -106,9 +103,8 @@ else:
     console_log.setLevel(logging.INFO)  # Display only important info to console
 
 # Load plugins
-from Plugin import PluginManager # 将'plugins'添加到环境path中
-
-PluginManager.plugin_manager.loadPlugins() # 加载默认数据库，新建mutes.json文件
+from Plugin import PluginManager
+PluginManager.plugin_manager.loadPlugins()
 config.loadPlugins()
 config.parse()  # Parse again to add plugin configuration options
 
@@ -174,10 +170,7 @@ class Actions(object):
         CryptConnection.manager.removeCerts()
 
         logging.info("Starting servers....")
-        ui_server.start()
-        file_server.start()
-
-        # gevent.joinall([gevent.spawn(ui_server.start), gevent.spawn(file_server.start)])
+        gevent.joinall([gevent.spawn(ui_server.start), gevent.spawn(file_server.start)])
 
     # Site commands
 
@@ -201,62 +194,18 @@ class Actions(object):
         logging.info("Creating directory structure...")
         from Site import Site
         from Site import SiteManager
-        SiteManager.site_manager.load() # 创建文件夹(域名系统1Name)并向site表插入1Name...信息,插入域名站点信息到sites.json文件中
-        os.mkdir("%s/%s" % (config.data_dir, address)) # 创建文件夹(新站点)
+        SiteManager.site_manager.load()
+
+        os.mkdir("%s/%s" % (config.data_dir, address))
         open("%s/%s/index.html" % (config.data_dir, address), "w").write("Hello %s!" % address)
 
         logging.info("Creating content.json...")
-        site = Site(address) # 创建默认setting，向数据库site表插入站点地址
-
-        # 签名一个json文件,将文件夹下文件哈希并将一些默认值保存在content.json文件中，extend 额外补加到content.json文件中，数据库content表中插入站点信息
+        site = Site(address)
         site.content_manager.sign(privatekey=privatekey, extend={"postmessage_nonce_security": True})
         site.settings["own"] = True
-        site.saveSettings()     # 更新站点信息到sites.json文件中
+        site.saveSettings()
 
         logging.info("Site created!")
-
-    # 为某个资源定价
-    def setPrice(self, address, relpath, price):
-        logging.info("set data price...")
-        fprice = 1
-        try:
-            fprice = float(price)
-        except:
-            logging.error("Error set {}'s price: price isn't a num.".format(os.path.join(address, relpath)))
-        while True and fprice:
-            logging.info("Error set {}'s price: price isn't a num.".format(os.path.join(address, relpath)))
-        from Site import Site
-        from Site import SiteManager
-        SiteManager.site_manager.load()
-        site = Site(address, allow_create=False)
-        if site.price_manger.setPrice(relpath, price):
-            return True
-        else:
-            logging.error("Error set {}'s price: set failed! Please try again.".format(os.path.join(address, relpath)))
-            return False
-
-    # 删除资源价格
-    def delPrice(self, address, relpath):
-        logging.info("set data price...")
-        from Site import Site
-        from Site import SiteManager
-        if not os.path.isdir(os.path.join(config.data_dir, address)):
-            logging.error("Error address:{} isn't an address! Please try again!".format(address))
-            return False
-        if not os.path.isfile(os.path.join(config.data_dir, os.path.join(address, relpath))):
-            logging.error("Error relpath:{} isn't in address! Please try again!".format(address))
-            return False
-        SiteManager.site_manager.load()
-        site = Site(address, allow_create=False)
-        if site.price_manger.delPrice(relpath):
-            return True
-        else:
-            logging.error("Error delete {}'s price: delete failed! Please try again.".format(os.path.join(address, relpath)))
-            return False
-
-    # 列出价格表
-    def listPrice(self, address, relpath):
-        pass
 
     def siteSign(self, address, privatekey=None, inner_path="content.json", publish=False, remove_missing_optional=False):
         from Site import Site
@@ -264,7 +213,7 @@ class Actions(object):
         from Debug import Debug
         SiteManager.site_manager.load()
         logging.info("Signing site: %s..." % address)
-        site = Site(address, allow_create=False) # 从sites.json加载setting
+        site = Site(address, allow_create=False)
 
         if not privatekey:  # If no privatekey defined
             from User import UserManager
@@ -385,6 +334,7 @@ class Actions(object):
 
         print on_completed.get()
         print "Downloaded in %.3fs" % (time.time()-s)
+
 
     def siteNeedFile(self, address, inner_path):
         from Site import Site
@@ -541,8 +491,6 @@ class Actions(object):
         import json
         print json.dumps(config.getServerInfo(), indent=2, ensure_ascii=False)
 
-    # def
-
 
 actions = Actions()
 # Starts here when running zeronet.py
@@ -550,6 +498,5 @@ actions = Actions()
 
 def start():
     # Call function
-    action_kwargs = config.getActionArguments() # get args
+    action_kwargs = config.getActionArguments()
     actions.call(config.action, action_kwargs)
-

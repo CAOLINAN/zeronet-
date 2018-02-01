@@ -1,5 +1,3 @@
-# coding=utf-8
-
 import time
 import logging
 import random
@@ -178,7 +176,7 @@ class WorkerManager(object):
             return False  # Workers number already maxed and no starting peers defined
         self.log.debug("Starting workers, tasks: %s, peers: %s, workers: %s" % (len(self.tasks), len(peers or []), len(self.workers)))
         if not peers:
-            peers = self.site.getConnectedPeers() # 返回peer实例列表
+            peers = self.site.getConnectedPeers()
             if len(peers) < self.getMaxWorkers():
                 peers += self.site.getRecentPeers(self.getMaxWorkers())
         if type(peers) is set:

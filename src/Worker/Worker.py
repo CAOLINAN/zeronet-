@@ -1,4 +1,3 @@
-# coding=utf-8
 import time
 
 import gevent
@@ -28,7 +27,7 @@ class Worker(object):
         self.peer.hash_failed = 0  # Reset hash error counter
         while self.running:
             # Try to pickup free file download task
-            task = self.manager.getTask(self.peer) # 返回空闲或较少工作的任务,task为字典
+            task = self.manager.getTask(self.peer)
             if not task:  # No more task
                 time.sleep(0.1)  # Wait a bit for new tasks
                 task = self.manager.getTask(self.peer)
@@ -39,13 +38,26 @@ class Worker(object):
                 task["time_started"] = time.time()  # Task started now
 
             if task["workers_num"] > 0:  # Wait a bit if someone already working on it
+                if task["peers"]:  # It's an update
+                    timeout = 3
+                else:
+                    timeout = 1
+
+                if task["size"] > 100 * 1024 * 1024:
+                    timeout = timeout * 2
+
                 if config.verbose:
-                    self.manager.log.debug("%s: Someone already working on %s (pri: %s), sleeping 1 sec..." % (self.key, task["inner_path"], task["priority"]))
-                for sleep_i in range(1,10):
+                    self.manager.log.debug("%s: Someone already working on %s (pri: %s), sleeping %s sec..." % (
+                        self.key, task["inner_path"], task["priority"], timeout
+                    ))
+
+                for sleep_i in range(1, timeout * 10):
                     time.sleep(0.1)
                     if task["done"] or task["workers_num"] == 0:
                         if config.verbose:
-                            self.manager.log.debug("%s: %s, picked task free after %ss sleep. (done: %s)" % (self.key, task["inner_path"], 0.1 * sleep_i, task["done"]))
+                            self.manager.log.debug("%s: %s, picked task free after %ss sleep. (done: %s)" % (
+                                self.key, task["inner_path"], 0.1 * sleep_i, task["done"]
+                            ))
                         break
 
             if task["done"]:
@@ -55,7 +67,7 @@ class Worker(object):
             site = task["site"]
             task["workers_num"] += 1
             try:
-                buff = self.peer.getFile(site.address, task["inner_path"], task["size"]) # peer 为当前所有节点 getFile从节点下载文件，返回buff
+                buff = self.peer.getFile(site.address, task["inner_path"], task["size"])
             except Exception, err:
                 self.manager.log.debug("%s: getFile error: %s" % (self.key, err))
                 buff = None
@@ -92,7 +104,7 @@ class Worker(object):
                     # Broken peer: More fails than tasks number but atleast 3
                     break
                 time.sleep(1)
-        self.peer.onWorkerDone() # 卵事没做
+        self.peer.onWorkerDone()
         self.running = False
         self.manager.removeWorker(self)
 

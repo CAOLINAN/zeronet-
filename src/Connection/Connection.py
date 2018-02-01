@@ -13,6 +13,7 @@ from Config import config
 from Debug import Debug
 from util import StreamingMsgpack
 from Crypt import CryptConnection
+from util import helper
 
 
 class Connection(object):
@@ -81,7 +82,7 @@ class Connection(object):
         return "<%s>" % self.__str__()
 
     def log(self, text):
-        self.server.log.debug("%s > %s" % (self.name, text))
+        self.server.log.debug("%s > %s" % (self.name, text.decode("utf8", "ignore")))
 
     def getValidSites(self):
         return [key for key, val in self.server.tor_manager.site_onions.items() if val == self.target_onion]
@@ -104,6 +105,8 @@ class Connection(object):
             if not self.server.tor_manager or not self.server.tor_manager.enabled:
                 raise Exception("Can't connect to onion addresses, no Tor controller present")
             self.sock = self.server.tor_manager.createSocket(self.ip, self.port)
+        elif config.tor == "always" and helper.isPrivateIp(self.ip) and self.ip not in config.ip_local:
+            raise Exception("Can't connect to local IPs in Tor: always mode")
         else:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -344,6 +347,7 @@ class Connection(object):
             else:
                 self.log("Unknown response: %s" % message)
         elif cmd:
+            self.server.num_recv += 1
             if cmd == "handshake":
                 self.handleHandshake(message)
             else:
@@ -397,6 +401,8 @@ class Connection(object):
             stat_key = message.get("cmd", "unknown")
             if stat_key == "response":
                 stat_key = "response: %s" % self.last_cmd_recv
+            else:
+                self.server.num_sent += 1
 
             self.server.stat_sent[stat_key]["num"] += 1
             if streaming:

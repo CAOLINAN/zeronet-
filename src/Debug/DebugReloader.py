@@ -5,7 +5,6 @@ import threading
 from Config import config
 
 if config.debug:  # Only load pyfilesytem if using debug mode
-# if False:
     try:
         from fs.osfs import OSFS
         pyfilesystem = OSFS("src")

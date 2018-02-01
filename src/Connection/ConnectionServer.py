@@ -1,19 +1,21 @@
 import logging
 import time
 import sys
+from collections import defaultdict
 
 import gevent
 import msgpack
 from gevent.server import StreamServer
 from gevent.pool import Pool
-from collections import defaultdict
 
+import util
 from Debug import Debug
 from Connection import Connection
 from Config import config
 from Crypt import CryptConnection
 from Crypt import CryptHash
 from Tor import TorManager
+from Site import SiteManager
 
 
 class ConnectionServer:
@@ -23,6 +25,7 @@ class ConnectionServer:
         self.last_connection_id = 1  # Connection id incrementer
         self.log = logging.getLogger("ConnServer")
         self.port_opened = None
+        self.peer_blacklist = SiteManager.peer_blacklist
 
         if config.tor != "disabled":
             self.tor_manager = TorManager(self.ip, self.port)
@@ -31,7 +34,6 @@ class ConnectionServer:
 
         self.connections = []  # Connections
         self.whitelist = config.ip_local  # No flood protection on this ips
-        # print('CLN debug whitelist: {}'.format(self.whitelist))
         self.ip_incoming = {}  # Incoming connections from ip in the last minute to avoid connection flood
         self.broken_ssl_peer_ids = {}  # Peerids of broken ssl connections
         self.ips = {}  # Connection by ip
@@ -45,10 +47,12 @@ class ConnectionServer:
         self.stat_sent = defaultdict(lambda: defaultdict(int))
         self.bytes_recv = 0
         self.bytes_sent = 0
+        self.num_recv = 0
+        self.num_sent = 0
 
         # Bittorrent style peerid
         self.peer_id = "-ZN0%s-%s" % (config.version.replace(".", ""), CryptHash.random(12, "base64"))
-        # print('CLN debug msgpack.version: {}'.format(msgpack.version))
+
         # Check msgpack version
         if msgpack.version[0] == 0 and msgpack.version[1] < 4:
             self.log.error(
@@ -59,7 +63,6 @@ class ConnectionServer:
 
         if port:  # Listen server on a port
             self.pool = Pool(500)  # do not accept more than 500 connections
-            # print('CLN debug port: {}'.format(port))
             self.stream_server = StreamServer(
                 (ip.replace("*", "0.0.0.0"), port), self.handleIncomingConnection, spawn=self.pool, backlog=100
             )
@@ -85,8 +88,7 @@ class ConnectionServer:
 
     def handleIncomingConnection(self, sock, addr):
         ip, port = addr
-        # print('CLN debug ip: {}'.format(addr))
-        # print('CLN debug self.whitelist: {}'.format(self.whitelist))
+
         # Connection flood protection
         if ip in self.ip_incoming and ip not in self.whitelist:
             self.ip_incoming[ip] += 1
@@ -138,6 +140,10 @@ class ConnectionServer:
         if create:  # Allow to create new connection if not found
             if port == 0:
                 raise Exception("This peer is not connectable")
+
+            if (ip, port) in self.peer_blacklist:
+                raise Exception("This peer is blacklisted")
+
             try:
                 if ip.endswith(".onion") and self.tor_manager.start_onions and site:  # Lock connection to site
                     connection = Connection(self, ip, port, target_onion=site_onion)
@@ -153,6 +159,10 @@ class ConnectionServer:
             except Exception, err:
                 connection.close("%s Connect error: %s" % (ip, Debug.formatException(err)))
                 raise err
+
+            if len(self.connections) > config.global_connected_limit:
+                gevent.spawn(self.checkMaxConnections)
+
             return connection
         else:
             return None
@@ -182,6 +192,11 @@ class ConnectionServer:
             last_message_time = 0
             s = time.time()
             for connection in self.connections[:]:  # Make a copy
+                if connection.ip.endswith(".onion"):
+                    timeout_multipler = 2
+                else:
+                    timeout_multipler = 1
+
                 idle = time.time() - max(connection.last_recv_time, connection.start_time, connection.last_message_time)
                 last_message_time = max(last_message_time, connection.last_message_time)
 
@@ -202,16 +217,16 @@ class ConnectionServer:
                     if not connection.ping():
                         connection.close("[Cleanup] Ping timeout")
 
-                elif idle > 10 and connection.incomplete_buff_recv > 0:
+                elif idle > 10 * timeout_multipler and connection.incomplete_buff_recv > 0:
                     # Incomplete data with more than 10 sec idle
                     connection.close("[Cleanup] Connection buff stalled")
 
-                elif idle > 10 and connection.protocol == "?":  # No connection after 10 sec
+                elif idle > 10 * timeout_multipler and connection.protocol == "?":  # No connection after 10 sec
                     connection.close(
                         "[Cleanup] Connect timeout: %.3fs" % idle
                     )
 
-                elif idle > 10 and connection.waiting_requests and time.time() - connection.last_send_time > 10:
+                elif idle > 10 * timeout_multipler and connection.waiting_requests and time.time() - connection.last_send_time > 10 * timeout_multipler:
                     # Sent command and no response in 10 sec
                     connection.close(
                         "[Cleanup] Command %s timeout: %.3fs" % (connection.last_cmd_sent, time.time() - connection.last_send_time)
@@ -222,7 +237,7 @@ class ConnectionServer:
                         "[Cleanup] Too many bad actions: %s" % connection.bad_actions
                     )
 
-                elif idle > 5*60 and connection.sites == 0:
+                elif idle > 5 * 60 and connection.sites == 0:
                     connection.close(
                         "[Cleanup] No site for connection"
                     )
@@ -232,7 +247,7 @@ class ConnectionServer:
                     connection.bad_actions = 0
 
             # Internet outage detection
-            if time.time() - last_message_time > max(60, 60*10/max(1,float(len(self.connections))/50)):
+            if time.time() - last_message_time > max(60, 60 * 10 / max(1, float(len(self.connections)) / 50)):
                 # Offline: Last message more than 60-600sec depending on connection number
                 if self.has_internet:
                     self.has_internet = False
@@ -245,6 +260,28 @@ class ConnectionServer:
 
             if time.time() - s > 0.01:
                 self.log.debug("Connection cleanup in %.3fs" % (time.time() - s))
+
+    @util.Noparallel(blocking=False)
+    def checkMaxConnections(self):
+        if len(self.connections) < config.global_connected_limit:
+            return 0
+
+        s = time.time()
+        num_connected_before = len(self.connections)
+        self.connections.sort(key=lambda connection: connection.sites)
+        num_closed = 0
+        for connection in self.connections:
+            idle = time.time() - max(connection.last_recv_time, connection.start_time, connection.last_message_time)
+            if idle > 60:
+                connection.close("Connection limit reached")
+                num_closed += 1
+            if num_closed > config.global_connected_limit * 0.1:
+                break
+
+        self.log.debug("Closed %s connections of %s after reached limit %s in %.3fs" % (
+            num_closed, num_connected_before, config.global_connected_limit, time.time() - s
+        ))
+        return num_closed
 
     def onInternetOnline(self):
         self.log.info("Internet online")
