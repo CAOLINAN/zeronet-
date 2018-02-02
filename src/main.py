@@ -290,7 +290,7 @@ class Actions(object):
             return False
 
     # delete source price
-    def deletePrice(self, address, path):
+    def deletePrice(self, address, path, privatekey=None):
         logging.info("delete data price...")
         from Site import Site
         from Site import SiteManager
@@ -323,7 +323,7 @@ class Actions(object):
         site = Site(address, allow_create=False)
         result = {}
         site.price_manger.loadPrices()
-        for source, price in site.price_manger.prices.items():
+        for source, price in site.price_manger.prices.iteritems():
             result.update({
                 source:price.price
             })

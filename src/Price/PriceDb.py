@@ -165,8 +165,7 @@ class PriceDb(Db):
             self.log.info("Success set %s price successful!" % (path))
             return True
         except Exception as e:
-            print e
-            self.log.error("Error set {}'s price".format(os.path.join(self.address, path)))
+            self.log.error("Error set {}'s price.Exception is {}".format(path, e))
             return False
 
     def deletePrice(self, path):
@@ -176,12 +175,17 @@ class PriceDb(Db):
         else:
             # self.log
             self.log.warning("There is not %s in self.prices success" % (path))
-        if self.execute("DELETE FROM price WHERE ?", {"path": path}):
-            self.log.info("Delete %s from self.prices success" % (path))
-            return True
+        res = self.execute("SELECT * FROM price WHERE ?", {"path": path})
+        if res.fetchone():
+            if self.execute("DELETE FROM price WHERE ?", {"path": path}):
+                self.log.info("Success delete %s from self.prices success" % (path))
+                return True
+            else:
+                self.log.error("Error delete %s from self.prices faild!" % (path))
+                return False
         else:
-            self.log.error("Delete %s from self.prices faild!" % (path))
-            return False
+            self.log.warning("Excess delete {}:not set ".format(path))
+            return True
 
     def loadPrices(self):
         for row in self.execute("SELECT * FROM price"):

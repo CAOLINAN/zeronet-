@@ -420,14 +420,26 @@ class UiWebsocket(object):
             return inner_path
 
     # some functions about price
-    def actionSetPrice(self, to, privatekey=None):
-        pass
+    def actionSetPrice(self, to, path, privatekey=None):
+        if self.site.price_manger.setPrice():
+            self.response(to, "success")
+        else:
+            self.response(to, "fail")
 
-    def actionDeletePrice(self):
-        pass
+    def actionDeletePrice(self, to, path):
+        if self.site.price_manger.deletePrice(path):
+            self.response(to, "success")
+        else:
+            self.response(to, "fail")
 
-    def actionListPrice(self):
-        pass
+    def actionListPrice(self, to):
+        self.site.price_manger.load()
+        result = {}
+        for source, price in self.site.price_manger.prices.iteritems():
+            result.update({
+                source: price
+            })
+        self.response(to, result)
 
     # Sign and publish content.json
     def actionSitePublish(self, to, privatekey=None, inner_path="content.json", sign=True):
