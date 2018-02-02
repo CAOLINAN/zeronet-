@@ -28,6 +28,7 @@ from util import helper
 from util import Diff
 from Plugin import PluginManager
 import SiteManager
+from Price import PriceDb
 
 
 @PluginManager.acceptPlugins
@@ -56,6 +57,7 @@ class Site(object):
         self.storage = SiteStorage(self, allow_create=allow_create)  # Save and load site files
         self.content_manager = ContentManager(self)
         self.content_manager.loadContents()  # Load content.json files
+        self.price_manger = PriceDb.getPriceDb(self.address)
         if "main" in sys.modules and "file_server" in dir(sys.modules["main"]):  # Use global file server by default if possible
             self.connection_server = sys.modules["main"].file_server
         else:

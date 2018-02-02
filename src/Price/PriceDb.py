@@ -162,6 +162,7 @@ class PriceDb(Db):
                  "path": temp_price.path
                  })
             self.prices[path] = temp_price
+            self.log.info("Success set %s price successful!" % (path))
             return True
         except Exception as e:
             print e

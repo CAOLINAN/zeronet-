@@ -271,6 +271,64 @@ class Actions(object):
         else:
             logging.error("[ERROR] Error during verifying site files!")
 
+    # pricing a source
+    def setPrice(self, address, path, price, privatekey=None):
+        logging.info("set data price...")
+        try:
+            price = float(price)
+        except:
+            logging.error("Error pricing {}: price {} isn't a num.".format(path, price))
+        from Site import Site
+        from Site import SiteManager
+        SiteManager.site_manager.load()
+        site = Site(address, allow_create=False)
+        if site.price_manger.setPrice(path, price):
+            return True
+        else:
+            logging.error(
+                "Error set {}'s price: set failed! Please try again.".format(path))
+            return False
+
+    # delete source price
+    def deletePrice(self, address, path):
+        logging.info("delete data price...")
+        from Site import Site
+        from Site import SiteManager
+        if not os.path.isdir(os.path.join(config.data_dir, address)):
+            logging.error("Error address:{} isn't an address! Please try again!".format(address))
+            return False
+        # maybe the creater move the file
+        # if not os.path.isfile(path):
+        #     logging.error("Error path:{} isn't a file! Please try again!".format(path))
+        #     return False
+        SiteManager.site_manager.load()
+        site = Site(address, allow_create=False)
+        if site.price_manger.deletePrice(path):
+            logging.info("Success delte {}'s price".format(path))
+            return True
+        else:
+            logging.error(
+                "Error delete {}'s price: delete failed! Please try again.".format(path))
+            return False
+
+    # list price
+    def listPrice(self, address):
+        logging.info("list data price...")
+        from Site import Site
+        from Site import SiteManager
+        if not os.path.isdir(os.path.join(config.data_dir, address)):
+            logging.error("Error address:{} isn't an address! Please try again!".format(address))
+            return False
+        SiteManager.site_manager.load()
+        site = Site(address, allow_create=False)
+        result = {}
+        site.price_manger.loadPrices()
+        for source, price in site.price_manger.prices.items():
+            result.update({
+                source:price.price
+            })
+        print result
+
     def dbRebuild(self, address):
         from Site import Site
         from Site import SiteManager

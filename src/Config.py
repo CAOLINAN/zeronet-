@@ -131,6 +131,23 @@ class Config(object):
         action = self.subparsers.add_parser("siteVerify", help='Verify site files using sha512: address')
         action.add_argument('address', help='Site to verify')
 
+        # Pricing
+        action = self.subparsers.add_parser("setPrice", help='Pricing site source')
+        action.add_argument('address', help='Site address')
+        action.add_argument('path', help='Source path, not support relative path')
+        action.add_argument('price', help='Source price')
+        action.add_argument("--privatekey", help="Site's privatekey")
+
+        # Delete price
+        action = self.subparsers.add_parser("deletePrice", help='Pricing site source')
+        action.add_argument('address', help='Site address')
+        action.add_argument('path', help='Source path, not support relative path')
+        action.add_argument("--privatekey", help="Site's privatekey")
+
+        # List price
+        action = self.subparsers.add_parser("listPrice", help='List site prices')
+        action.add_argument('address', help='Site address')
+
         # dbRebuild
         action = self.subparsers.add_parser("dbRebuild", help='Rebuild site database cache')
         action.add_argument('address', help='Site to rebuild')
