@@ -282,12 +282,33 @@ class Actions(object):
         from Site import SiteManager
         SiteManager.site_manager.load()
         site = Site(address, allow_create=False)
-        if site.price_manger.setPrice(path, price):
-            return True
-        else:
-            logging.error(
-                "Error set {}'s price: set failed! Please try again.".format(path))
-            return False
+
+        if not privatekey:  # If no privatekey defined
+            from User import UserManager
+            user = UserManager.user_manager.get()
+            if user:
+                site_data = user.getSiteData(address)
+                privatekey = site_data.get("privatekey")
+            else:
+                privatekey = None
+            if not privatekey:
+                # Not found in users.json, ask from console
+                import getpass
+                privatekey = getpass.getpass("Private key (input hidden):")
+            from Crypt import CryptBitcoin
+            privatekey_address = CryptBitcoin.privatekeyToAddress(privatekey)
+            if privatekey_address == address:
+                if site.price_manger.setPrice(path, price):
+                    return True
+                else:
+                    logging.error(
+                        "Error set {}'s price: set failed! Please try again.".format(path))
+                    return False
+            else:
+                logging.error(
+                    "Error set {}'s price: error password.".format(path))
+                return False
+
 
     # delete source price
     def deletePrice(self, address, path, privatekey=None):

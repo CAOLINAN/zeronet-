@@ -41,6 +41,7 @@ class Config(object):
             "http://tracker.opentrackr.org:1337/announce",
             "http://explodie.org:6969/announce",
             "http://retracker.spark-rostov.ru:80/announce"
+            # "http://127.0.0.1:8080/announce"
         ]
         # Platform specific
         if sys.platform.startswith("win"):
