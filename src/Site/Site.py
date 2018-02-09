@@ -168,8 +168,28 @@ class Site(object):
 
         # Start download files
         file_threads = []
+
+        # download price_db second(content.json is the first)
+        site_address = os.path.join(config.data_dir, self.address)
+        price_db = os.path.join(site_address, "price.db")
+
+        # care about the file occupancy
+        if os.path.isfile(price_db):
+            os.unlink(price_db)
+        del site_address
+        del price_db
+        price_db = self.needFile("price.db", update=self.bad_files.get("price.db"))
+        if not price_db:
+            self.log.debug("Download %s failed, please try again" % ("price_db"))
+            return False  # Could not download price.db
+        self.price_manger = PriceDb.getPriceDb(self.address)
+        # need to check whether the path is relpath
+        prices = self.price_manger.prices.keys()
         if download_files:
             for file_relative_path in self.content_manager.contents[inner_path].get("files", {}).keys():
+                # adding the condition to limit the download
+                if file_relative_path in prices:
+                    continue
                 file_inner_path = content_inner_dir + file_relative_path
 
                 # Try to diff first

@@ -263,7 +263,6 @@ class UiRequest(object):
     def actionWrapper(self, path, extra_headers=None):
         if not extra_headers:
             extra_headers = []
-
         match = re.match("/(?P<address>[A-Za-z0-9\._-]+)(?P<inner_path>/.*|$)", path)
         if match:
             address = match.group("address")
