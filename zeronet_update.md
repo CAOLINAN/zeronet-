@@ -259,6 +259,163 @@ Feb 9, 2018
 为声望添加评论
 	修改plugins/PeerDb/PeerDbPlugin.py
 		添加了注释。。
+AnnounceLocal 插件
+	新增plugins/AnnounceLocal/AnnounceLocalPlugin.py
+		本地公布插件
+	新增plugins/AnnounceLocal/BroadcastServer.py
+		广播服务
+	新增plugins/AnnounceLocal/Test/TestAnnounce.py
+		单元测试
+	新增plugins/AnnounceLocal/Test/conftest.py
+		单元测试
+	新增plugins/AnnounceLocal/Test/pytest.ini
+		单元测试
 
+
+
+Oct 17, 2017
+添加请求权限的细节
+	修改src/Config.py
+		端口由3112更改为3114
+	修改plugins/MergerSite/MergerSitePlugin.py
+		新增actionPermissionDetails方法
+	修改src/Ui/UiWebsocket.py
+		新增actionPermissionDetails方法
+	修改src/Ui/media/Wrapper.coffee
+		前端代码
+	修改src/Ui/media/all.js
+		前端代码
+添加0.6.0的更改日志
+	修改CHANGELOG.md
+		新增
+			新插件：大文件支持
+			自动固定大文件下载
+			启用TCP_NODELAY以支持套接字
+			actionOptionalFileList API命令参数列出未下载的文件或仅包含大文件
+			serverShowdirectory API命令参数，以允许在OS文件浏览器中显示站点的目录
+			fileNeed API命令初始化可选文件下载
+			wrapperGetAjaxKey API命令为AJAX请求请求nonce
+			数据库文件支持Json.gz
+			P2P端口检查（感谢grez911）
+			`--download_optional auto`参数为新添加的站点启用自动可选文件下载
+			/ Stats上的大文件和协议命令请求的统计信息
+			允许基于auth_address设置用户限制
+		更改
+			更积极和频繁的连接超时检查
+			对大于512KB的文件使用msgpack上下文文件流
+			允许可选文件工作者超过工作者限制
+			自动重定向到nonce_error上的包装
+			在可选文件删除时发送websocket事件
+			优化sites.json保存
+			默认启用速度更快的基于C的msgpack打包器
+			对Bootstrapper插件SQL查询的主要优化
+			不要在重新启动时重置坏文件计数器，以便更容易放弃无法访问的文件
+			传入连接限制从1000更改为500，以避免在Windows上达到套接字限制
+			更改了tracker boot.zeronet.io域名，因为zeronet.io在某些国家被禁止
+		修复
+			用户目录中的子目录
+		ZeroNet 0.5.7 (2017-07-19)
+		新增
+			新插件：CORS向其他网站的内容请求读取权限(跨域访问)
+
+Oct 18, 2017
+更新中文帮助文档
+	修改README-zh-cn.md
+		python修改为python2
+合并pr
+
+Oct 21, 2017
+报告GeoLite2下载的进度
+	修改plugins/Sidebar/SidebarPlugin.py
+		notification命令修改为progress。
+		计算进度
+		下载失败增加提示
+	修改src/Ui/media/Notifications.coffee
+		前端代码
+	修改src/Ui/media/all.js
+		前端代码
+修复使用Tor时的网站违规问题
+	修改src/Site/Site.py
+		新增tor网络连接正常判断
+每个站点6个连接	
+	修改src/Site/Site.py
+		needConnections默认连接数由4更改为6
+修改端口端口由3114修改为3120
+合并pr(中文文档修复)
+
+Oct 22, 2017
+添加有关cli签名错误的更多详细信息
+	修改src/main.py
+		异常时显示更多异常信息
+自动忽略数据库文件
+	修改src/Config.py
+		修改端口端口由3120修改为3122
+	修改src/Content/ContentManager.py
+		添加判断分支
+	修改src/Site/SiteStorage.py
+		添加获取数据库的方法
+Oct 26, 2017
+在bigfile上传后重新载入content.json信息
+	修改plugins/Bigfile/BigfilePlugin.py
+		getFileInfo中新增参数new_file=True
+		方法结束前重新加载content.json
+调用UiWebsocket动作的返回值的响应函数
+	修改src/Ui/UiWebsocket.py
+		判断结果，做出回应
+对于慢任务总是打开工作者
+	修改src/Worker/WorkerManager.py
+		更改打开工作者函数位置
+从content.json位置中剥离文件信息
+	修改src/Content/ContentManager.py
+		拆分函数
+让大文件上传初始化兼容合并站点
+	修改plugins/Bigfile/BigfilePlugin.py
+		响应修改为返回
+	修改plugins/MergerSite/MergerSitePlugin.py
+		合并方法
+		新增actionBigfileUploadInit
+端口由3122更改为3125
+修复fileInfo测试
+	修改src/Test/TestContent.py
+DbQuery：没有and的where还应该是where
+	修改src/Db/DbQuery.py
+		新增判断条件
+Newsfeed：在where时添加括号
+	修改plugins/Newsfeed/NewsfeedPlugin.py
+		查询条件添加括号
+
+Jan 25, 2018
+0.6.1版本修改日志
+	修改CHANGELOG.md
+		新增
+			新插件：图表
+			收集并显示有关您对ZeroNet网络贡献的图表
+			允许列表作为sql查询中的参数替换。 （感谢imachug）
+			Newsfeed查询时间统计信息（点击“来自ZeroHello的X.Xs中的XX站点”
+			新的UiWebsocket API命令：用于将命令作为其他站点运行
+			针对大文件的ajax轮询
+			按类型和网站地址过滤Feed
+			FileNeed，Bigfile上传命令与合并站点兼容
+			在端口打开/改变状态改变时发送事件
+			关于权限请求的更多描述
+		更改
+			减少边栏geoip数据库缓存的内存使用量
+			将不可靠的tracker更改为tracker
+			如果跨域已经授权则不显示跨域相关问题
+			重建合并网站时避免UI阻塞
+			在签名时跳过列出被忽略的目录
+			在多用户模式下，在添加新证书而不是第一次访问时显示种子欢迎消息
+			在多个网络接口上打开更快的异步端口
+			允许JavaScript模式
+			只有在鼠标按钮被按下的情况下，才会缩放侧边栏
+		修复
+			打开端口检查错误报告（感谢imachug）
+			超出范围的大文件请求
+			不要在gevent greenlets上发生两次错误
+			新闻提要跳过没有数据库的网站
+			采用多个参数的新闻传递查询
+			使用UNION和UNION ALL进行新闻提交查询
+			修复站点大于10MB的站点克隆
+			同时请求来自不同站点的文件时，不可靠的Websocket连接
 
 
