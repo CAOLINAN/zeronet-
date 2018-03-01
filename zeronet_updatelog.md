@@ -138,7 +138,7 @@
 	 - 新增
 		 - 新插件：CORS向其他网站的内容请求读取权限(跨域访问)
 
-# 0.6.1版本修改日志
+# 添加0.6.1版本修改日志
  - 修改CHANGELOG.md
 	 - 新增
 		 - 新插件：图表
@@ -202,7 +202,7 @@
 
 ----
 # 具体每次提交信息如下：
-##Feb 23, 2018
+## Feb 23, 2018
  - 修复msgpack版本引发的bug
 	 - msgpack改为0.4.4至0.5.5的版本
  - 修复大文件下载按钮bug
@@ -259,12 +259,12 @@
 		 - 修复侧边栏缺失了地球bug
 		 - 将侧边栏对象保存为本地对象
 
-##Feb 20, 2018
+## Feb 20, 2018
  - 修复网站归档下载测试
 	 - 修改src/Test/TestSiteDownload.py
 		 - 在站点发布之后睡眠0.1秒再等待下载
 
-##Feb 18, 2018
+## Feb 18, 2018
  - 添加0.6.2的更改日志
 	 - 修改CHANGELOG.md
 		 - 新增
@@ -301,7 +301,7 @@
 	 - 修改src/Ui/UiWebsocket.py
 		 - 证书选择默认值由unique to site 更改为无证书
 
-##Feb 13, 2018
+## Feb 13, 2018
  - 修改CLI中站点下载，站点公布，站点缺失文件命令
 	 - 修改src/Config.py
 		 - 端口由3327修改为3328
@@ -333,12 +333,12 @@
 	 - 修改src/File/FileRequest.py
 		 - 导入socket
 
-##Feb 13, 2018
+## Feb 13, 2018
  - 增加本地节点超时
 	 - 修改plugins/AnnounceLocal/AnnounceLocalPlugin.py
 		 - 超时时间由10分钟设置为20分钟
 
-##Feb 12, 2018
+## Feb 12, 2018
  - 只读我们需要的东西
 	 - 修改src/Connection/Connection.py
 		 - 每次接收取64*1024与read_bytes中的最小值的字节数
@@ -346,7 +346,7 @@
 	 - 修改src/Connection/Connection.py
 		 - 检查解包器时候还有数据残留在内存中
 
-##Feb 11, 2018
+## Feb 11, 2018
  - 合并提交的分支
 	 - 合并俄语的帮助文档
  - 修复bigfile下载到不存在的目录
@@ -357,7 +357,7 @@
  - 合并pr
  - 	合并俄语的帮助文档
 
-##Feb 10, 2018
+## Feb 10, 2018
  - 修改端口端口由3319修改为3321
  - Tor连接错误和uPnP打通错误并不重要
 	 - 修改src/File/FileServer.py
@@ -419,7 +419,7 @@
 	 - 修改plugins/AnnounceLocal/AnnounceLocalPlugin.py
 		 - 记录时间，原始discover函数通过gevent异步调用
 
-##Feb 9, 2018
+## Feb 9, 2018
  - 删除本地广播绑定到IP以确保测试在linux中通过
 	 - 修改src/Config.py
 		 - 修改端口端口由3312修改为3313
@@ -475,7 +475,7 @@
 	 - 新增plugins/AnnounceLocal/Test/pytest.ini
 		 - 单元测试
 
-##Oct 17, 2017
+## Oct 17, 2017
  - 添加请求权限的细节
 	 - 修改src/Config.py
 		 - 端口由3112更改为3114
@@ -520,13 +520,13 @@
 		 - 新增
 			 - 新插件：CORS向其他网站的内容请求读取权限(跨域访问)
 
-##Oct 18, 2017
+## Oct 18, 2017
  - 更新中文帮助文档
 	 - 修改README-zh-cn.md
 		 - python修改为python2
  - 合并pr
 
-##Oct 21, 2017
+## Oct 21, 2017
  - 报告GeoLite2下载的进度
 	 - 修改plugins/Sidebar/SidebarPlugin.py
 		 - notification命令修改为progress。
@@ -545,7 +545,7 @@
  - 修改端口端口由3114修改为3120
  - 合并pr(中文文档修复)
 
-##Oct 22, 2017
+## Oct 22, 2017
  - 添加有关cli签名错误的更多详细信息
 	 - 修改src/main.py
 		 - 异常时显示更多异常信息
@@ -557,7 +557,7 @@
 	 - 修改src/Site/SiteStorage.py
      - 添加获取数据库的方法
 
-##Oct 26, 2017
+## Oct 26, 2017
  - 在bigfile上传后重新载入content.json信息
 	 - 修改plugins/Bigfile/BigfilePlugin.py
 		 - getFileInfo中新增参数new_file=True
@@ -587,7 +587,7 @@
 	 - 修改plugins/Newsfeed/NewsfeedPlugin.py
 		 - 查询条件添加括号
 
-##Jan 25, 2018
+## Jan 25, 2018
  - 0.6.1版本修改日志
 	 - 修改CHANGELOG.md
 		 - 新增
