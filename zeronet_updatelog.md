@@ -1,8 +1,8 @@
 # 添加0.3.4的更改日志
  - 修改CHANGELOG.md
-		AES，ECIES API功能支持
-		API中的PushState和ReplaceState url操作支持
-		多用户本地存储
+ -- AES，ECIES API功能支持
+ -- API中的PushState和ReplaceState url操作支持
+ -- 多用户本地存储
 
 # 添加0.3.5的更改日志
  - 修改CHANGELOG.md
