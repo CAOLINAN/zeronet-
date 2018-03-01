@@ -1,86 +1,86 @@
 # 添加0.3.4的更改日志
  - 修改CHANGELOG.md
- -- AES，ECIES API功能支持
- -- API中的PushState和ReplaceState url操作支持
- -- 多用户本地存储
+    * AES，ECIES API功能支持
+    * API中的PushState和ReplaceState url操作支持
+    * 多用户本地存储
 
 # 添加0.3.5的更改日志
  - 修改CHANGELOG.md
-		带有.onion隐藏服务的Full Tor支持
-		使用ZeroNet协议的Bootstrap
-		修复Gevent 1.0.2兼容性
+	* 带有.onion隐藏服务的Full Tor支持
+	* 使用ZeroNet协议的Bootstrap
+	* 修复Gevent 1.0.2兼容性
 
 # 添加0.3.6的更改日志
  - 修改CHANGELOG.md
-		新ZeroHello
-		新闻源功能
-		安全修复
+	新ZeroHello
+	新闻源功能
+	安全修复
 
 # 添加0.3.7的更改日志
  - 修改CHANGELOG.md
-		补丁命令通过仅传输更改的行来减少带宽使用
-		其他CPU /内存优化
+	补丁命令通过仅传输更改的行来减少带宽使用
+	其他CPU /内存优化
 
 # 添加0.4.0的更改日志
  - 修改CHANGELOG.md
-		合并网站
-		用户文件归档
-		允许将自定义字段存储在json表中
+	合并网站
+	用户文件归档
+	允许将自定义字段存储在json表中
 
-添加0.4.1的更改日志
-	修改CHANGELOG.md
-		显着加快启动时间
-		减少内存使用量
+# 添加0.4.1的更改日志
+ - 修改CHANGELOG.md
+	显着加快启动时间
+	减少内存使用量
 
-添加0.5.0的更改日志
-	修改CHANGELOG.md
-		限制和管理可选文件
-		API命令注册/下载/删除可选文件
+# 添加0.5.0的更改日志
+ - 修改CHANGELOG.md
+	限制和管理可选文件
+	API命令注册/下载/删除可选文件
 
-添加0.5.2的更改日志
-	修改CHANGELOG.md
-		多语言界面和网站翻译支持
+# 添加0.5.2的更改日志
+ - 修改CHANGELOG.md
+	多语言界面和网站翻译支持
 
-添加0.5.2的更改日志
-	修改CHANGELOG.md
-		用户静音
+# 添加0.5.2的更改日志
+ - 修改CHANGELOG.md
+	用户静音
 
-添加0.5.3的更改日志
-	修改CHANGELOG.md
-		Tar.gz和zip压缩静态内容支持
+# 添加0.5.3的更改日志
+ - 修改CHANGELOG.md
+	Tar.gz和zip压缩静态内容支持
 
-添加0.5.4的更改日志
-	修改CHANGELOG.md
-		Major Tor：总是进行模式改进
+# 添加0.5.4的更改日志
+ - 修改CHANGELOG.md
+	Major Tor：总是进行模式改进
 		重要的安全修复
 		更新依赖关系
 		更好的内容分发
 
-添加0.5.5的更改日志
-	修改CHANGELOG.md
-		删除时的网站黑名单选项
-		更新克隆网站的源代码
-		用于加快网站内容显示的新优先级算法
-		传出套接字绑定选项
+# 添加0.5.5的更改日志
+ - 修改CHANGELOG.md
+	* 删除时的网站黑名单选项
+	* 更新克隆网站的源代码
+	* 用于加快网站内容显示的新优先级算法
+	* 传出套接字绑定选项
 
-添加0.5.6的更改日志
-	修改CHANGELOG.md
-		新增
-			源代码升级期间的代理旁路
-			使用DNS重新绑定的XSS漏洞
-			开放端口检查
-			独立的update.py参数解析
-			uPnP在启动时崩溃
-			CoffeeScript 1.12.6兼容性
-			多值参数解析
-			从包含特殊字符的目录运行时出现数据库错误
-			网站锁定违例记录
-		更改
-			certSelect API的回调命令
-			更紧凑的json列表格式
-		修复
-			删除过时的auth_key_sha512和签名格式
-			改进西班牙语翻译
+# 添加0.5.6的更改日志
+ - 修改CHANGELOG.md
+	- 新增
+		- 源代码升级期间的代理旁路
+		- 使用DNS重新绑定的XSS漏洞
+		- 开放端口检查
+		- 独立的update.py参数解析
+		- uPnP在启动时崩溃
+		- CoffeeScript 1.12.6兼容性
+		- 多值参数解析
+		- 从包含特殊字符的目录运行时出现数据库错误
+		- 网站锁定违例记录
+	- 更改
+		- certSelect API的回调命令
+		- 更紧凑的json列表格式
+	- 修复
+		- 删除过时的auth_key_sha512和签名格式
+		- 改进西班牙语翻译
 
 Jul 30, 2017
 添加0.5.7的更改日志
