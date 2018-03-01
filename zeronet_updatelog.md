@@ -201,15 +201,13 @@
 		 - 不存在的文件(标记为？)大文件信息
 
 ----
-# [体每次提交信息如下] (https://github.com/CAOLINAN/zeronet_analysis/blob/master/zeronet_update.md)：
+# [体每次提交信息如下](https://github.com/CAOLINAN/zeronet_analysis/blob/master/zeronet_update.md)：
 ## Feb 23, 2018
  - 修复msgpack版本引发的bug
 	 - msgpack改为0.4.4至0.5.5的版本
  - 修复大文件下载按钮bug
 	 - 端口由3335修改为3337，其余部分修改了前端代码
- - 
- - 端口修改由3329修改为3335
- - 	
+ - 端口修改由3329修改为3335	
  - 合并侧边栏和包装器代码
 	 - 修改前端代码
  - 增强安全性，在代理服务器上不允许NOSANDBOX权限，因为会泄露cookie
@@ -293,7 +291,6 @@
 			 - 在发布之前取消重复的节点
 			 - 不存在的文件(标记为？)大文件信息
  - 端口修改由3328修改为3329
- - 
  - 允许广播失败
 	 - 修改plugins/AnnounceLocal/BroadcastServer.py
 		 - 捕获socket连接中出现的异常，异常添加到警告日志中
