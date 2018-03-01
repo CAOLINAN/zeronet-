@@ -1,28 +1,28 @@
 # 添加0.3.4的更改日志
-	- 修改CHANGELOG.md
+ - 修改CHANGELOG.md
 		AES，ECIES API功能支持
 		API中的PushState和ReplaceState url操作支持
 		多用户本地存储
 
 # 添加0.3.5的更改日志
-	- 修改CHANGELOG.md
+ - 修改CHANGELOG.md
 		带有.onion隐藏服务的Full Tor支持
 		使用ZeroNet协议的Bootstrap
 		修复Gevent 1.0.2兼容性
 
 # 添加0.3.6的更改日志
-	- 修改CHANGELOG.md
+ - 修改CHANGELOG.md
 		新ZeroHello
 		新闻源功能
 		安全修复
 
 # 添加0.3.7的更改日志
-	- 修改CHANGELOG.md
+ - 修改CHANGELOG.md
 		补丁命令通过仅传输更改的行来减少带宽使用
 		其他CPU /内存优化
 
 # 添加0.4.0的更改日志
-	- 修改CHANGELOG.md
+ - 修改CHANGELOG.md
 		合并网站
 		用户文件归档
 		允许将自定义字段存储在json表中
