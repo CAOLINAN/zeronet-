@@ -201,7 +201,7 @@
 		 - 不存在的文件(标记为？)大文件信息
 
 ----
-# 具体每次提交信息如下：
+# [体每次提交信息如下] (https://github.com/CAOLINAN/zeronet_analysis/blob/master/zeronet_update.md)：
 ## Feb 23, 2018
  - 修复msgpack版本引发的bug
 	 - msgpack改为0.4.4至0.5.5的版本
@@ -620,4 +620,5 @@
 			 - 使用UNION和UNION ALL进行新闻提交查询
 			 - 修复站点大于10MB的站点克隆
 			 - 同时请求来自不同站点的文件时，不可靠的Websocket连接
+
 ...
