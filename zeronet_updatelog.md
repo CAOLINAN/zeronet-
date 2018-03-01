@@ -201,7 +201,7 @@
 		 - 不存在的文件(标记为？)大文件信息
 
 ----
-# [体每次提交信息如下](https://github.com/CAOLINAN/zeronet_analysis/blob/master/zeronet_update.md)：
+# [每次提交信息如下](https://github.com/CAOLINAN/zeronet_analysis/blob/master/zeronet_update.md)：
 ## Feb 23, 2018
  - 修复msgpack版本引发的bug
 	 - msgpack改为0.4.4至0.5.5的版本
