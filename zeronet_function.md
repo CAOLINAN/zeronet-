@@ -57,10 +57,13 @@
 
 ## Bigfile
 大文件拆分
+
 ## Chart
 图表信息，记录对zeronet的贡献
+
 ## Cors
 跨域问题，权限验证
+
 ## CryptMessage
 消息签名。
 
