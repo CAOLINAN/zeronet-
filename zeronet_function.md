@@ -62,40 +62,58 @@
 ## Cors
 跨域问题，权限验证
 ## CryptMessage
+消息签名。
 
 ## disabled-Bootstrapper
+启动器设置，洋葱网络一些节点设置。
 
 ## disabled-Dnschain
+DNS链的域名解析。
 
 ## disabled-DonationMessage
+捐赠地址设置。
 
 ## disabled-Multiuser
+多用户设置。
 
 ## disabled-StemPort
+stem端口设置信息。进入暗网。
 
 ## disabled-UiPassword
+关闭保存Cookie，包含用户名密码登录等相关问题的操作
 
 ## disabled-Zeroname-local
+关闭代理服务的相关操作。
 
 ## FilePack
+文件打包，对文件进行压缩解压等操作。
 
 ## MergeSite
+合并站点，合并站点需要的一些操作。
 
 ## Mute
+静音。设置站点黑名单。
 
 ## Newsfeed
+关注新闻。设置用户关注的一些操作。
 
 ## OptionalManager
+可选管理器。创建可选文件数据库，记录文件大小等状态。记录一些请求的日志。进行可选文件的限制。
 
 ## PeerDb
+节点数据库，将连接的节点信息保存在数据库中。
 
 ## Sidebar
+侧边栏，侧边栏的一些功能，包括站点限制、站点缺失文件、WebGL显示等。
 
 ## Stats
+统计信息，涵盖站点大小、站点停留时间、CPU使用情况、连接情况、缓存情况等。
 
 ## TranslateSite
+翻译站点
 
 ## Trayicon
+图标操作，通知栏显示图标，进行软件的一些操作、
 
 ## Zeroname
-
+加载域名系统，域名解析
